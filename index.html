@@ -6,6 +6,7 @@
 <title>TripShare — Split Smarter, Travel Together</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#7c6aff" />
+<link rel="apple-touch-icon" href="icons/icon.svg" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
@@ -181,6 +182,22 @@ input,select,textarea{font-family:inherit}
 .user-avatar-sm{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;color:#fff}
 .user-name-label{font-size:.85rem;font-weight:700}
 .user-email-label{font-size:.72rem;color:var(--text2)}
+.account-menu-header{display:flex;align-items:center;gap:12px;padding:4px 0 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.account-menu-name{font-size:1rem;font-weight:800}
+.account-menu-sub{font-size:.72rem;color:var(--text2);margin-top:2px}
+.account-menu-item{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:10px;transition:background .15s}
+.account-menu-item:hover{background:var(--surface2)}
+.account-menu-item-icon{font-size:1.1rem;width:28px;text-align:center}
+.account-menu-item-label{font-size:.9rem;font-weight:600}
+.account-menu-item.danger .account-menu-item-label{color:var(--danger)}
+.install-banner{display:none;align-items:center;gap:12px;margin:0 16px 10px;background:linear-gradient(135deg,rgba(124,106,255,.15),rgba(255,106,138,.1));border:1px solid rgba(124,106,255,.35);border-radius:14px;padding:12px 14px;cursor:pointer;transition:all .2s}
+.install-banner:hover{border-color:var(--primary)}
+.install-banner-icon{font-size:1.4rem;flex-shrink:0}
+.install-banner-text{flex:1}
+.install-banner-title{font-size:.85rem;font-weight:700;color:var(--primary)}
+.install-banner-sub{font-size:.72rem;color:var(--text2);margin-top:1px}
+.install-banner-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:700;cursor:pointer;flex-shrink:0}
+.install-banner-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:0 0 0 6px;flex-shrink:0}
 .section-label{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px}
 
 /* ═══════════════════════════════════════════════════════
@@ -489,6 +506,17 @@ select.form-input{cursor:pointer}
     ⚡ <strong>Firebase not configured.</strong> Invite codes work only on this device until you <a href="#" onclick="showFirebaseSetup()" style="color:var(--accent3);font-weight:700">set up real-time sync →</a>
   </div>
 
+  <!-- PWA INSTALL BANNER -->
+  <div class="install-banner" id="install-banner" onclick="installPWA()">
+    <div class="install-banner-icon">📲</div>
+    <div class="install-banner-text">
+      <div class="install-banner-title">Install TripShare App</div>
+      <div class="install-banner-sub">Add to home screen for quick access</div>
+    </div>
+    <button class="install-banner-btn" onclick="event.stopPropagation();installPWA()">Install</button>
+    <button class="install-banner-close" onclick="event.stopPropagation();hideInstallBanner()" title="Dismiss">✕</button>
+  </div>
+
   <div class="trips-actions">
     <button class="btn-new-trip" onclick="openCreateTrip()">✈️ &nbsp;Create New Trip</button>
     <button class="btn-join-trip" onclick="openJoinTrip()">🔗 &nbsp;Join with Invite Code</button>
@@ -502,7 +530,7 @@ select.form-input{cursor:pointer}
   </div>
 
   <div class="trips-user-bar">
-    <div class="user-info">
+    <div class="user-info" onclick="showTripsMenu()" style="cursor:pointer;flex:1">
       <div class="user-avatar-sm" id="trips-user-avatar" style="background:linear-gradient(135deg,#7c6aff,#a78bff)">?</div>
       <div>
         <div class="user-name-label" id="trips-user-name">...</div>
@@ -730,7 +758,7 @@ select.form-input{cursor:pointer}
       <div class="card">
         <div class="card-title">About</div>
         <div style="padding:10px 0;font-size:.82rem;color:var(--text2);line-height:1.8">
-          <strong style="color:var(--text)">TripShare v2.0</strong><br/>
+          <strong style="color:var(--text)">TripShare v1.0</strong><br/>
           Built for families and groups who travel together.<br/>
           Real-time sync · Offline-first · PWA Ready<br/>
           <span style="font-size:.72rem">Data stored locally + optional Firebase real-time sync.</span>
@@ -1010,6 +1038,44 @@ select.form-input{cursor:pointer}
     <div style="height:14px"></div>
     <button class="btn-submit" onclick="saveEditTrip()">Save Changes</button>
     <button class="btn-submit-secondary" onclick="closeModal('modal-edit-trip')">Cancel</button>
+  </div>
+</div>
+
+<!-- ACCOUNT MENU -->
+<div class="modal-overlay" id="modal-account" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="account-menu-header">
+      <div class="user-avatar-sm" id="account-avatar" style="width:44px;height:44px;font-size:1.1rem;background:var(--primary)">?</div>
+      <div>
+        <div class="account-menu-name" id="account-name">User</div>
+        <div class="account-menu-sub" id="account-sub">Local mode</div>
+      </div>
+    </div>
+    <div class="account-menu-item" onclick="closeModal('modal-account');openEditUserName()">
+      <div class="account-menu-item-icon">✏️</div>
+      <div class="account-menu-item-label">Edit Display Name</div>
+    </div>
+    <div class="account-menu-item" id="account-install-item" onclick="closeModal('modal-account');installPWA()" style="display:none">
+      <div class="account-menu-item-icon">📲</div>
+      <div class="account-menu-item-label">Install App</div>
+    </div>
+    <div class="account-menu-item danger" onclick="closeModal('modal-account');confirmSignOut()" style="margin-top:4px">
+      <div class="account-menu-item-icon">🚪</div>
+      <div class="account-menu-item-label">Sign Out</div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT DISPLAY NAME -->
+<div class="modal-overlay" id="modal-edit-user-name" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Display Name</div>
+    <input class="form-input" id="edit-user-name-input" type="text" placeholder="Your name" maxlength="40"
+      onkeydown="if(event.key==='Enter')saveUserName()" style="margin-bottom:12px"/>
+    <button class="btn-submit" onclick="saveUserName()">Save Name</button>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-edit-user-name')">Cancel</button>
   </div>
 </div>
 
@@ -1844,9 +1910,57 @@ async function submitJoinTrip(){
 }
 
 function showTripsMenu(){
+  if(!S.user)return;
+  const av=document.getElementById('account-avatar');
+  const nm=document.getElementById('account-name');
+  const sub=document.getElementById('account-sub');
+  if(av){av.textContent=memberInitials(S.user.name);av.style.background=S.user.color||MEMBER_COLORS[0];}
+  if(nm)nm.textContent=S.user.name;
+  if(sub)sub.textContent=document.getElementById('trips-sync-mode')?.textContent||'Local mode';
+  document.getElementById('modal-account').classList.add('open');
+}
+function openEditUserName(){
+  if(!S.user)return;
+  const inp=document.getElementById('edit-user-name-input');
+  if(inp)inp.value=S.user.name||'';
+  document.getElementById('modal-edit-user-name').classList.add('open');
+  if(inp)setTimeout(()=>inp.focus(),120);
+}
+async function saveUserName(){
+  if(!S.user)return;
+  const inp=document.getElementById('edit-user-name-input');
+  const name=(inp?inp.value:'').trim();
+  if(!name){showToast('⚠️ Name cannot be empty');return;}
+  if(name===S.user.name){closeModal('modal-edit-user-name');return;}
+  S.user.name=name;
+  lsSet('current-user',S.user);
+  // Update localStorage member caches for all trips
+  S.trips.forEach(trip=>{
+    const members=lsGet(`trip:${trip.id}:members`,[]);
+    const i=members.findIndex(m=>m.userId===S.user.id);
+    if(i!==-1){members[i].name=name;lsSet(`trip:${trip.id}:members`,members);}
+  });
+  // Update in-memory member for current trip
+  const m=S.members.find(mb=>mb.userId===S.user.id);
+  if(m)m.name=name;
+  // Update Firestore member records across all trips (background)
+  if(FIREBASE_ENABLED&&db){
+    S.trips.forEach(async trip=>{
+      try{
+        const snap=await db.collection('trips').doc(trip.id).collection('members')
+          .where('userId','==',S.user.id).get();
+        snap.docs.forEach(d=>d.ref.update({name}));
+      }catch(e){}
+    });
+  }
+  closeModal('modal-edit-user-name');
+  renderTripsScreen();renderDashboard();
+  showToast('✅ Name updated!');
+}
+function confirmSignOut(){
   showConfirm({
-    icon:'👤',title:'Account Options',
-    msg:`Signed in as: ${S.user?S.user.name:'Guest'}\n\nTap Sign Out to change your display name.`,
+    icon:'🚪',title:'Sign Out?',
+    msg:'You will need to enter your name again. Your trips data stays on this device.',
     okLabel:'Sign Out',okClass:'danger',
     onOk:()=>{lsDel('current-user');location.reload();}
   });
@@ -2320,6 +2434,45 @@ window.addEventListener('offline',()=>{
   S.isOnline=false;setSyncStatus('offline');
   document.getElementById('offline-banner').classList.remove('hidden');
 });
+
+/* ─────────────────────────────────────────────────────
+   PWA INSTALL
+───────────────────────────────────────────────────── */
+let _installPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _installPrompt=e;
+  showInstallBanner();
+});
+window.addEventListener('appinstalled',()=>{
+  _installPrompt=null;
+  hideInstallBanner();
+  showToast('✅ TripShare installed!');
+});
+function showInstallBanner(){
+  const b=document.getElementById('install-banner');
+  if(b)b.style.display='flex';
+  const m=document.getElementById('account-install-item');
+  if(m)m.style.display='flex';
+}
+function hideInstallBanner(){
+  const b=document.getElementById('install-banner');
+  if(b)b.style.display='none';
+}
+function installPWA(){
+  if(!_installPrompt){
+    showToast('ℹ️ Open in Chrome and use browser menu → Add to Home Screen');
+    return;
+  }
+  _installPrompt.prompt();
+  _installPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted'){showToast('✅ Installing TripShare…');}
+    _installPrompt=null;
+    hideInstallBanner();
+    const m=document.getElementById('account-install-item');
+    if(m)m.style.display='none';
+  });
+}
 
 /* ─────────────────────────────────────────────────────
    SERVICE WORKER

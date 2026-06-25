@@ -37,4 +37,12 @@ fs.writeFileSync('public/index.html', html);
   if (fs.existsSync(file)) fs.copyFileSync(file, `public/${file}`);
 });
 
+// Copy icons/ folder recursively
+if (fs.existsSync('icons')) {
+  fs.mkdirSync('public/icons', { recursive: true });
+  fs.readdirSync('icons').forEach(file => {
+    fs.copyFileSync(`icons/${file}`, `public/icons/${file}`);
+  });
+}
+
 console.log('✅  Build complete → public/index.html');
