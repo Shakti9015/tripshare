@@ -1,0 +1,10 @@
+You are an Android App developer and need your help in designing the below app. Requirement is here:
+I will be going on a trip with my family and friends' family in a car. In this trip I want to track and calculate the trip expense between the two families. This app should be accessible over internet in a sharable mode like if I add any expense, my friend can see and vice-versa. 
+The app should allow me to add the name of members, has pre-filled data list which generally part of trip expense like Fuel, parking , food etc and if not, it allows to add custom data. Provide option which tells payment done by UPI, Credit card, cash etc.
+
+Provide option to Add new trip like - Goa trip which is active. And end trip option once its done and money settled etc.
+
+Additionally, provide a summary dashboard showing total costs per person and balance. 
+Use modern and beautiful design, offline capabilities with automatic data synchronization once a connection is restored.
+Clean architecture and production ready code with Premium moder UI having option for Dark/light mode and ensure it is fully localized for international travelers.
+Help feature, swipe action, search and stats board. Also integrate biometric authentication for secure expense tracking and reporting.

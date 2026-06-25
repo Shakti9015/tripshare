@@ -1,0 +1,12 @@
+{
+  "name": "tripshare",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js && npx serve public"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

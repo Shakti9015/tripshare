@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>TripShare — Split Smarter, Travel Together</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#7c6aff" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+/* ═══════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — THEMES
+═══════════════════════════════════════════════════════ */
+:root[data-theme="dark"] {
+  --bg:#0f0f13; --surface:#1a1a24; --surface2:#23232f; --surface3:#2d2d3d;
+  --border:#3a3a4f; --primary:#7c6aff; --primary-glow:rgba(124,106,255,0.22);
+  --accent:#ff6a8a; --accent2:#35d07a; --accent3:#ffb347;
+  --text:#f0f0f8; --text2:#9090b0; --text3:#5a5a7a;
+  --card-shadow:0 8px 32px rgba(0,0,0,0.5); --nav-bg:rgba(26,26,36,0.95);
+}
+:root[data-theme="light"] {
+  --bg:#f4f4fb; --surface:#ffffff; --surface2:#f0f0fa; --surface3:#e6e6f5;
+  --border:#d0d0e8; --primary:#6557e8; --primary-glow:rgba(101,87,232,0.12);
+  --accent:#e8506f; --accent2:#1fba60; --accent3:#e68900;
+  --text:#18181f; --text2:#5a5a7a; --text3:#9090b0;
+  --card-shadow:0 4px 24px rgba(100,100,180,0.10); --nav-bg:rgba(255,255,255,0.97);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+button{font-family:inherit}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ═══════════════════════════════════════════════════════
+   FULL-PAGE SCREENS
+═══════════════════════════════════════════════════════ */
+.full-screen{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);overflow-y:auto;
+}
+.full-screen.gradient{
+  background:linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f0f1a 100%);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOCK SCREEN
+═══════════════════════════════════════════════════════ */
+#screen-lock{gap:32px}
+.lock-logo{text-align:center}
+.lock-logo .app-icon{
+  width:96px;height:96px;border-radius:28px;
+  background:linear-gradient(135deg,#7c6aff,#ff6a8a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;margin:0 auto 16px;
+  box-shadow:0 0 60px rgba(124,106,255,0.45);
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.lock-logo h1{font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#fff 30%,#c8b8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lock-logo p{color:#9090b0;margin-top:8px;font-size:.92rem}
+.biometric-ring{
+  width:130px;height:130px;border-radius:50%;
+  border:3px solid rgba(124,106,255,0.25);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:all .3s;
+}
+.biometric-ring::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:3px solid transparent;
+  border-top-color:#7c6aff;border-right-color:#ff6a8a;
+  animation:spin 2s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.biometric-inner{
+  width:84px;height:84px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;transition:all .3s;
+  border:2px solid rgba(255,255,255,0.1);
+}
+.biometric-ring:hover .biometric-inner,.biometric-ring.scanning .biometric-inner{background:rgba(124,106,255,0.35);transform:scale(1.08)}
+.lock-hint{color:#5a5a7a;font-size:.8rem;text-align:center;line-height:1.7}
+.btn-lock-unlock{
+  background:linear-gradient(135deg,#7c6aff,#ff6a8a);
+  border:none;color:#fff;font-weight:700;font-size:.95rem;
+  padding:14px 44px;border-radius:40px;cursor:pointer;
+  box-shadow:0 8px 28px rgba(124,106,255,0.4);transition:transform .2s;
+  letter-spacing:.3px;
+}
+.btn-lock-unlock:hover{transform:scale(1.04)}
+.lock-version{position:absolute;bottom:24px;color:#3a3a5a;font-size:.72rem}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH SCREEN
+═══════════════════════════════════════════════════════ */
+#screen-auth{gap:0;padding:24px 20px;max-width:400px;width:100%}
+.auth-header{text-align:center;padding:20px 0 32px}
+.auth-header .icon{font-size:48px;margin-bottom:12px}
+.auth-header h2{font-size:1.6rem;font-weight:900}
+.auth-header p{color:var(--text2);margin-top:6px;font-size:.88rem;line-height:1.6}
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.auth-input-wrap{position:relative}
+.auth-input-wrap .auth-input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px}
+.auth-input{
+  width:100%;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:14px;padding:13px 14px 13px 44px;color:var(--text);
+  font-size:.95rem;outline:none;transition:border .2s;
+}
+.auth-input:focus{border-color:var(--primary)}
+.btn-auth-primary{
+  background:linear-gradient(135deg,#7c6aff,#ff6a8a);
+  border:none;color:#fff;font-weight:700;font-size:1rem;
+  padding:14px;border-radius:14px;cursor:pointer;
+  box-shadow:0 6px 20px rgba(124,106,255,0.35);transition:transform .2s;
+}
+.btn-auth-primary:hover{transform:scale(1.02)}
+.auth-note{text-align:center;font-size:.74rem;color:var(--text3);line-height:1.6;margin-top:4px}
+
+/* ═══════════════════════════════════════════════════════
+   TRIPS SCREEN
+═══════════════════════════════════════════════════════ */
+#screen-trips{position:fixed;inset:0;z-index:150;background:var(--bg);overflow-y:auto;padding-bottom:90px;display:none}
+.trips-header{padding:56px 20px 20px;background:linear-gradient(180deg,var(--surface2) 0%,transparent 100%)}
+.trips-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.trips-header h2{font-size:1.4rem;font-weight:900}
+.trips-header p{font-size:.85rem;color:var(--text2)}
+.trips-list{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.trip-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:20px;padding:16px;cursor:pointer;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.trip-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--card-shadow)}
+.trip-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.trip-card-icon{font-size:28px}
+.trip-status-pill{font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px}
+.trip-status-pill.active{background:rgba(53,208,122,0.12);color:var(--accent2);border:1px solid rgba(53,208,122,0.3)}
+.trip-status-pill.ended{background:rgba(144,144,176,0.1);color:var(--text3);border:1px solid var(--border)}
+.trip-card-name{font-size:1rem;font-weight:800;margin-bottom:3px}
+.trip-card-meta{font-size:.76rem;color:var(--text2)}
+.trip-card-stats{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.trip-card-stat{font-size:.76rem;color:var(--text2)}
+.trip-card-stat span{font-weight:700;color:var(--text)}
+.trips-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.trips-empty .empty-icon{font-size:56px;margin-bottom:16px}
+.trips-empty h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.trips-empty p{font-size:.84rem;line-height:1.6}
+.trips-actions{padding:16px;display:flex;flex-direction:column;gap:10px}
+.btn-new-trip{
+  background:linear-gradient(135deg,#7c6aff,#ff6a8a);
+  border:none;color:#fff;font-weight:700;font-size:1rem;
+  padding:14px;border-radius:16px;cursor:pointer;
+  box-shadow:0 6px 20px rgba(124,106,255,0.35);transition:transform .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-new-trip:hover{transform:scale(1.02)}
+.btn-join-trip{
+  background:var(--surface2);border:1.5px solid var(--border);
+  color:var(--text);font-weight:700;font-size:1rem;
+  padding:14px;border-radius:16px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-join-trip:hover{border-color:var(--primary);color:var(--primary)}
+.trips-user-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:160;
+  background:var(--nav-bg);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:space-between;
+}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-avatar-sm{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;color:#fff}
+.user-name-label{font-size:.85rem;font-weight:700}
+.user-email-label{font-size:.72rem;color:var(--text2)}
+.section-label{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px}
+
+/* ═══════════════════════════════════════════════════════
+   TOP NAV
+═══════════════════════════════════════════════════════ */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--nav-bg);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:58px;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;cursor:pointer}
+.logo-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#7c6aff,#ff6a8a);display:flex;align-items:center;justify-content:center;font-size:15px}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.sync-status{font-size:.72rem;color:var(--text2);display:flex;align-items:center;gap:4px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite}
+.sync-dot.offline{background:var(--accent);animation:none}
+.sync-dot.syncing{background:var(--accent3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.btn-icon{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;background:var(--surface2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+.btn-icon:hover{background:var(--primary);color:#fff}
+.trip-name-badge{background:var(--primary-glow);border:1px solid var(--primary);color:var(--primary);font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;cursor:pointer;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ═══════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════ */
+.app-shell{padding-top:58px;padding-bottom:84px;max-width:480px;margin:0 auto}
+.section{display:none}
+.section.active{display:block}
+.offline-banner{background:rgba(255,106,138,0.1);border:1px solid rgba(255,106,138,0.25);color:var(--accent);font-size:.8rem;padding:8px 16px;margin:10px 16px 0;border-radius:12px;display:flex;align-items:center;gap:8px}
+.offline-banner.hidden{display:none!important}
+
+/* ═══════════════════════════════════════════════════════
+   TRIP HERO
+═══════════════════════════════════════════════════════ */
+.trip-hero{
+  background:linear-gradient(135deg,#7c6aff 0%,#ff6a8a 100%);
+  margin:14px 16px;border-radius:24px;padding:22px 20px 18px;
+  box-shadow:0 8px 40px rgba(124,106,255,0.35);position:relative;overflow:hidden;color:#fff;
+}
+.trip-hero::before{content:'';position:absolute;top:-40px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none}
+.trip-hero-actions{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:10;pointer-events:all}
+.hero-btn{background:rgba(255,255,255,0.18);border:none;color:#fff;border-radius:8px;padding:5px 10px;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s;position:relative;z-index:10;pointer-events:all}
+.hero-btn:hover{background:rgba(255,255,255,0.3)}
+.hero-btn.danger{background:rgba(255,100,100,0.3)}
+.hero-btn.success{background:rgba(80,220,120,0.35)}
+.trip-hero-label{font-size:.68rem;font-weight:700;letter-spacing:2px;opacity:.85;text-transform:uppercase}
+.trip-hero-name{font-size:1.45rem;font-weight:900;margin:4px 0 2px}
+.trip-hero-name-row{display:flex;align-items:center;gap:7px}
+.hero-edit-btn{background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:7px;padding:3px 7px;font-size:.78rem;cursor:pointer;opacity:.8;line-height:1;transition:all .2s}
+.hero-edit-btn:hover{opacity:1;background:rgba(255,255,255,0.28)}
+.trip-hero-sub{font-size:.82rem;opacity:.8;margin-bottom:16px}
+.trip-hero-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hero-stat{background:rgba(255,255,255,0.14);border-radius:14px;padding:10px 6px;text-align:center}
+.hero-stat-val{font-size:1.1rem;font-weight:800}
+.hero-stat-lbl{font-size:.62rem;opacity:.85;margin-top:2px}
+
+/* ═══════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════ */
+.card{background:var(--surface);border-radius:20px;padding:16px 18px;margin:0 16px 12px;box-shadow:var(--card-shadow);border:1px solid var(--border)}
+.card-title{font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.card-title-action{font-size:.78rem;color:var(--primary);cursor:pointer;letter-spacing:0;text-transform:none;font-weight:600}
+
+/* Balance */
+.balance-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.balance-pill{border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.balance-pill.owe{background:rgba(255,106,138,0.1);border:1px solid rgba(255,106,138,0.22)}
+.balance-pill.owed{background:rgba(53,208,122,0.1);border:1px solid rgba(53,208,122,0.22)}
+.balance-pill-label{font-size:.68rem;font-weight:700;letter-spacing:.7px;text-transform:uppercase}
+.balance-pill.owe .balance-pill-label{color:var(--accent)}
+.balance-pill.owed .balance-pill-label{color:var(--accent2)}
+.balance-pill-amount{font-size:1.35rem;font-weight:900}
+.balance-pill.owe .balance-pill-amount{color:var(--accent)}
+.balance-pill.owed .balance-pill-amount{color:var(--accent2)}
+.balance-pill-desc{font-size:.7rem;color:var(--text2)}
+
+/* Settlement */
+.settlement-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.settlement-item:last-child{border-bottom:none}
+.settlement-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#fff;flex-shrink:0}
+.settlement-text{flex:1}
+.settlement-text strong{font-size:.87rem;font-weight:700}
+.settlement-sub{font-size:.72rem;color:var(--text2);margin-top:2px}
+.settlement-amount{font-size:.98rem;font-weight:800;color:var(--accent)}
+.settlement-amount.ok{color:var(--accent2)}
+
+/* Members */
+.member-chips{display:flex;gap:8px;flex-wrap:wrap}
+.member-chip{display:flex;align-items:center;gap:7px;background:var(--surface2);border-radius:40px;padding:5px 12px 5px 5px;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.member-chip:hover{border-color:var(--primary);background:var(--primary-glow)}
+.member-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:#fff;flex-shrink:0}
+.member-chip-name{font-size:.8rem;font-weight:600}
+.member-chip-share{font-size:.68rem;color:var(--text2)}
+.add-member-chip{background:var(--primary-glow);border:1px dashed var(--primary);color:var(--primary);border-radius:40px;padding:5px 14px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
+.add-member-chip:hover{background:var(--primary);color:#fff}
+.mc-delete{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;color:var(--text3);margin-left:2px;cursor:pointer;transition:all .2s;flex-shrink:0;font-weight:400}
+.mc-delete:hover{background:var(--accent);color:#fff;transform:scale(1.1)}
+.mc-action{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s;flex-shrink:0;margin-left:2px;color:var(--text3)}
+.mc-action.mc-transfer:hover{background:var(--primary);color:#fff;transform:scale(1.1)}
+.mc-action.mc-leave:hover{background:#f59e0b;color:#fff;transform:scale(1.1)}
+.mc-crown{font-size:9px;vertical-align:middle;margin-left:2px}
+.transfer-member-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin:12px 0}
+.transfer-member-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;border:2px solid var(--border);transition:all .2s}
+.transfer-member-item:hover{border-color:var(--primary);background:var(--primary-glow)}
+.transfer-member-item.selected{border-color:var(--primary);background:var(--primary-glow);font-weight:700}
+
+/* Expense list */
+.expense-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);position:relative;cursor:pointer;transition:transform .2s;overflow:hidden}
+.expense-item:last-child{border-bottom:none}
+.expense-item:hover{transform:translateX(4px)}
+.expense-icon{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.expense-details{flex:1;min-width:0}
+.expense-name{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.expense-meta{font-size:.7rem;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pay-method-badge{font-size:.6rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-weight:600}
+.expense-amount{text-align:right;flex-shrink:0}
+.expense-amount-val{font-size:.93rem;font-weight:800}
+.expense-amount-who{font-size:.67rem;color:var(--text2);margin-top:2px}
+.swipe-delete-hint{position:absolute;right:-64px;top:0;bottom:0;width:60px;background:rgba(255,106,138,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;transition:right .25s;border-radius:0 12px 12px 0}
+.expense-item.swiped .swipe-delete-hint{right:0}
+.expense-item.swiped{transform:translateX(-60px)!important}
+
+/* Category pills */
+.cat-pills{display:flex;gap:7px;flex-wrap:wrap}
+.cat-pill{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:9px 11px;cursor:pointer;transition:all .2s;min-width:55px}
+.cat-pill:hover,.cat-pill.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.cat-pill-icon{font-size:17px}
+.cat-pill-lbl{font-size:.6rem;font-weight:600;white-space:nowrap}
+
+/* Payment method chips */
+.pay-chips{display:flex;gap:7px;flex-wrap:wrap}
+.pay-chip{display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:40px;font-size:.77rem;font-weight:600;cursor:pointer;transition:all .2s}
+.pay-chip:hover,.pay-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* Payer chips */
+.payer-chips{display:flex;gap:7px;flex-wrap:wrap}
+.payer-chip{padding:7px 13px;border-radius:40px;background:var(--surface2);border:1.5px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+.payer-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* Search */
+.search-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;margin:10px 16px 12px;transition:border .2s}
+.search-bar:focus-within{border-color:var(--primary)}
+.search-bar input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.88rem}
+.search-bar input::placeholder{color:var(--text3)}
+
+/* Stats bars */
+.stat-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-bar-wrap{flex:1}
+.stat-bar-label{display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:4px}
+.stat-bar-track{height:6px;background:var(--surface3);border-radius:10px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.stat-person{font-size:.78rem;font-weight:700;min-width:65px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Form */
+.form-group{margin-bottom:14px}
+.form-label{font-size:.74rem;font-weight:700;color:var(--text2);letter-spacing:.4px;text-transform:uppercase;margin-bottom:7px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;color:var(--text);font-size:.93rem;outline:none;transition:border .2s}
+.form-input:focus{border-color:var(--primary)}
+select.form-input{cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.split-toggle{display:flex;gap:6px}
+.split-btn{flex:1;padding:9px 4px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:.77rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
+.split-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* FAB */
+.fab{position:fixed;bottom:90px;right:22px;z-index:50;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#7c6aff,#ff6a8a);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(124,106,255,0.5);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.fab:hover{transform:scale(1.1) rotate(8deg)}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(18px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;left:50%;transform:translateX(-50%);width:100%}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:5px 18px;border-radius:12px;transition:all .2s;color:var(--text3)}
+.nav-item.active{color:var(--primary)}
+.nav-item-icon{font-size:21px}
+.nav-item-label{font-size:.6rem;font-weight:600;letter-spacing:.3px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--surface);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:18px 20px 32px;max-height:92vh;overflow-y:auto;animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:38px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 18px}
+.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:16px}
+.modal-subtitle{font-size:.82rem;color:var(--text2);margin-top:-10px;margin-bottom:14px}
+.btn-submit{width:100%;background:linear-gradient(135deg,#7c6aff,#ff6a8a);color:#fff;border:none;border-radius:16px;padding:14px;font-size:.97rem;font-weight:800;cursor:pointer;margin-top:8px;transition:transform .2s;box-shadow:0 6px 20px rgba(124,106,255,0.28)}
+.btn-submit:hover{transform:scale(1.02)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-submit-secondary{width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);font-weight:700;border-radius:16px;padding:13px;font-size:.97rem;cursor:pointer;margin-top:8px;transition:all .2s}
+.btn-submit-secondary:hover{border-color:var(--primary);color:var(--primary)}
+
+/* Invite code */
+.invite-code-box{background:var(--surface2);border:1.5px dashed var(--primary);border-radius:16px;padding:18px;text-align:center;margin:12px 0}
+.invite-code-val{font-size:2rem;font-weight:900;letter-spacing:5px;color:var(--primary);font-family:monospace}
+.invite-code-hint{font-size:.76rem;color:var(--text2);margin-top:6px}
+.btn-copy{background:var(--primary-glow);border:1px solid var(--primary);color:var(--primary);border-radius:10px;padding:8px 18px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:10px;transition:all .2s}
+.btn-copy:hover{background:var(--primary);color:#fff}
+
+/* Settings */
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.setting-item:last-child{border-bottom:none}
+.setting-left{display:flex;align-items:center;gap:12px}
+.setting-icon{width:38px;height:38px;border-radius:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px}
+.setting-label{font-size:.88rem;font-weight:600}
+.setting-desc{font-size:.72rem;color:var(--text2);margin-top:2px}
+.setting-value{font-size:.82rem;color:var(--primary);font-weight:600}
+.setting-arrow{color:var(--text3);font-size:.9rem}
+
+/* Help */
+.help-item{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .2s}
+.help-item:last-child{border-bottom:none}
+.help-item:hover{opacity:.75}
+.help-icon{width:38px;height:38px;border-radius:13px;background:var(--primary-glow);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.help-text h4{font-size:.86rem;font-weight:700;margin-bottom:3px}
+.help-text p{font-size:.74rem;color:var(--text2);line-height:1.55}
+
+/* Empty state */
+.empty-state{text-align:center;padding:36px 20px;color:var(--text2)}
+.empty-icon{font-size:44px;margin-bottom:10px;opacity:.7}
+.empty-state h4{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-state p{font-size:.8rem;line-height:1.6}
+
+/* Loading */
+.loading-dots{display:inline-flex;gap:4px;align-items:center}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:bounce 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* Toast */
+.toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:10px 22px;font-size:.83rem;font-weight:600;z-index:400;box-shadow:var(--card-shadow);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Confirm modal */
+.confirm-modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-modal.open{display:flex}
+.confirm-box{background:var(--surface);border-radius:24px;padding:24px 22px;width:100%;max-width:360px;border:1px solid var(--border);animation:zoomIn .25s ease}
+@keyframes zoomIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.confirm-icon{font-size:40px;text-align:center;margin-bottom:12px}
+.confirm-title{font-size:1rem;font-weight:800;text-align:center;margin-bottom:6px}
+.confirm-msg{font-size:.82rem;color:var(--text2);text-align:center;line-height:1.6;margin-bottom:18px}
+.confirm-btns{display:flex;gap:10px}
+.btn-confirm-cancel{flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-confirm-ok{flex:1;padding:12px;background:var(--accent);border:none;color:#fff;border-radius:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-confirm-ok.primary{background:var(--primary)}
+
+@media(max-width:480px){.app-shell{max-width:100%}.bottom-nav{left:0;transform:none;width:100%}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     LOCK SCREEN
+═══════════════════════════════════════════════════ -->
+<div id="screen-lock" class="full-screen gradient">
+  <div class="lock-logo">
+    <div class="app-icon">✈️</div>
+    <h1>TripShare</h1>
+    <p>Split smarter, travel together</p>
+  </div>
+  <div class="biometric-ring" id="biometric-ring" onclick="attemptBiometric()">
+    <div class="biometric-inner" id="biometric-inner">🔐</div>
+  </div>
+  <p class="lock-hint" id="lock-hint">Tap to authenticate<br/>with biometric or device PIN</p>
+  <button class="btn-lock-unlock" onclick="attemptBiometric()">Unlock App</button>
+  <p class="lock-version">TripShare v1.0 · Offline-Ready · Multi-User</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════════════ -->
+<div id="screen-auth" class="full-screen" style="display:none">
+  <div style="width:100%;max-width:420px;padding:0 20px">
+    <div class="auth-header">
+      <div class="icon">👋</div>
+      <h2>Welcome to TripShare</h2>
+      <p>Enter your name to get started.<br/>No account required — works offline too.</p>
+    </div>
+    <div class="auth-form">
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">👤</span>
+        <input class="auth-input" id="auth-name" type="text" placeholder="Your display name (e.g. Shakti)" maxlength="30" autocomplete="name" />
+      </div>
+      <button class="btn-auth-primary" onclick="continueAsGuest()">Get Started →</button>
+      <p class="auth-note">Your name is saved on this device.<br/>Enable Firebase for real-time sync with others.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TRIPS SCREEN
+═══════════════════════════════════════════════════ -->
+<div id="screen-trips">
+  <div class="trips-header">
+    <div class="trips-header-top">
+      <div>
+        <h2>My Trips</h2>
+        <p id="trips-welcome-msg">Loading...</p>
+      </div>
+      <button class="btn-icon" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
+
+  <div id="trips-sync-notice" style="margin:0 16px 8px;background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);border-radius:12px;padding:10px 14px;font-size:.78rem;color:var(--accent3);display:none">
+    ⚡ <strong>Firebase not configured.</strong> Invite codes work only on this device until you <a href="#" onclick="showFirebaseSetup()" style="color:var(--accent3);font-weight:700">set up real-time sync →</a>
+  </div>
+
+  <div class="trips-actions">
+    <button class="btn-new-trip" onclick="openCreateTrip()">✈️ &nbsp;Create New Trip</button>
+    <button class="btn-join-trip" onclick="openJoinTrip()">🔗 &nbsp;Join with Invite Code</button>
+  </div>
+
+  <div class="section-label">Your Trips</div>
+  <div id="trips-list" class="trips-list">
+    <div style="text-align:center;padding:30px;color:var(--text2)">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="trips-user-bar">
+    <div class="user-info">
+      <div class="user-avatar-sm" id="trips-user-avatar" style="background:linear-gradient(135deg,#7c6aff,#a78bff)">?</div>
+      <div>
+        <div class="user-name-label" id="trips-user-name">...</div>
+        <div class="user-email-label" id="trips-sync-mode">Local mode</div>
+      </div>
+    </div>
+    <button class="btn-icon" onclick="showTripsMenu()" title="Account options">⋯</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════ -->
+<div id="screen-app" style="display:none">
+
+  <nav class="topnav">
+    <div class="logo" onclick="backToTrips()">
+      <div class="logo-icon">✈️</div>
+      <span id="nav-trip-name" class="trip-name-badge">Trip</span>
+    </div>
+    <div class="nav-actions">
+      <span class="sync-status">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">Ready</span>
+      </span>
+      <button class="btn-icon" onclick="toggleTheme()" id="theme-btn">🌙</button>
+      <button class="btn-icon" onclick="openShareTrip()" title="Share trip">🔗</button>
+    </div>
+  </nav>
+
+  <div class="app-shell">
+
+    <div class="offline-banner hidden" id="offline-banner">📶 Offline — changes will sync when you reconnect</div>
+
+    <!-- ══ HOME ══ -->
+    <div id="sec-home" class="section active">
+
+      <div class="trip-hero">
+        <div class="trip-hero-actions">
+          <button class="hero-btn" onclick="openShareTrip()">🔗 Share</button>
+          <button class="hero-btn danger" id="btn-end-trip" onclick="confirmEndTrip()">⏹ End</button>
+          <button class="hero-btn success" id="btn-reactivate-trip" onclick="confirmReactivateTrip()" style="display:none">▶ Re-Activate</button>
+        </div>
+        <div class="trip-hero-label" id="hero-status-label">🌍 Active Trip</div>
+        <div class="trip-hero-name-row">
+          <div class="trip-hero-name" id="hero-trip-name">Loading...</div>
+          <button class="hero-edit-btn" id="btn-edit-trip-name" onclick="openEditTrip()" style="display:none" title="Edit trip details">✏️</button>
+        </div>
+        <div class="trip-hero-sub" id="hero-trip-sub">Fetching data...</div>
+        <div class="trip-hero-stats">
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-total">—</div><div class="hero-stat-lbl">Total Spent</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-per-person">—</div><div class="hero-stat-lbl">Per Person</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-count">0</div><div class="hero-stat-lbl">Expenses</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Your Balance <span class="card-title-action" onclick="switchTab('sec-stats')">Full Stats →</span></div>
+        <div class="balance-grid">
+          <div class="balance-pill owe">
+            <div class="balance-pill-label">You Owe</div>
+            <div class="balance-pill-amount" id="bal-owe">—</div>
+            <div class="balance-pill-desc" id="bal-owe-to">calculating...</div>
+          </div>
+          <div class="balance-pill owed">
+            <div class="balance-pill-label">You're Owed</div>
+            <div class="balance-pill-amount" id="bal-owed">—</div>
+            <div class="balance-pill-desc" id="bal-owed-from">calculating...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Settle Up 💸 <span class="card-title-action" onclick="switchTab('sec-stats')">View All →</span></div>
+        <div id="settlements-list">
+          <div class="empty-state" style="padding:16px"><div>🎉</div><p>All settled up!</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Members <span class="card-title-action" onclick="openAddMember()">+ Add</span></div>
+        <div class="member-chips" id="member-chips">
+          <div class="add-member-chip" onclick="openAddMember()">+ Add Member</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Expenses <span class="card-title-action" onclick="switchTab('sec-expenses')">See All →</span></div>
+        <div id="expense-list-home">
+          <div class="empty-state" style="padding:20px">
+            <div class="empty-icon">🧾</div>
+            <p>No expenses yet. Tap + to add one!</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- sec-home -->
+
+    <!-- ══ EXPENSES ══ -->
+    <div id="sec-expenses" class="section">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="search-input" placeholder="Search expenses..." oninput="filterExpenses(this.value)" />
+        <span id="search-clear" style="cursor:pointer;color:var(--text3);display:none" onclick="clearSearch()">✕</span>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Filter by Category</div>
+        <div class="cat-pills" id="filter-cats">
+          <div class="cat-pill active" data-cat="all"      onclick="filterCat(this,'all')"><div class="cat-pill-icon">🗂️</div><div class="cat-pill-lbl">All</div></div>
+          <div class="cat-pill" data-cat="fuel"     onclick="filterCat(this,'fuel')"><div class="cat-pill-icon">⛽</div><div class="cat-pill-lbl">Fuel</div></div>
+          <div class="cat-pill" data-cat="food"     onclick="filterCat(this,'food')"><div class="cat-pill-icon">🍽️</div><div class="cat-pill-lbl">Food</div></div>
+          <div class="cat-pill" data-cat="hotel"    onclick="filterCat(this,'hotel')"><div class="cat-pill-icon">🏨</div><div class="cat-pill-lbl">Hotel</div></div>
+          <div class="cat-pill" data-cat="toll"     onclick="filterCat(this,'toll')"><div class="cat-pill-icon">🛣️</div><div class="cat-pill-lbl">Toll</div></div>
+          <div class="cat-pill" data-cat="activity" onclick="filterCat(this,'activity')"><div class="cat-pill-icon">🎢</div><div class="cat-pill-lbl">Activity</div></div>
+          <div class="cat-pill" data-cat="parking"  onclick="filterCat(this,'parking')"><div class="cat-pill-icon">🅿️</div><div class="cat-pill-lbl">Parking</div></div>
+          <div class="cat-pill" data-cat="shop"     onclick="filterCat(this,'shop')"><div class="cat-pill-icon">🛍️</div><div class="cat-pill-lbl">Shopping</div></div>
+          <div class="cat-pill" data-cat="other"    onclick="filterCat(this,'other')"><div class="cat-pill-icon">📝</div><div class="cat-pill-lbl">Other</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span id="expenses-count">Expenses</span></div>
+        <div id="expense-list-full">
+          <div class="empty-state"><div class="empty-icon">🧾</div><h4>No expenses yet</h4><p>Tap the + button to add your first expense</p></div>
+        </div>
+      </div>
+    </div><!-- sec-expenses -->
+
+    <!-- ══ STATS ══ -->
+    <div id="sec-stats" class="section">
+
+      <div class="card">
+        <div class="card-title">Trip Overview</div>
+        <div class="balance-grid">
+          <div class="balance-pill owed" style="align-items:center;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:4px">💰</div>
+            <div class="balance-pill-label">Total Spent</div>
+            <div class="balance-pill-amount" id="stats-total">—</div>
+          </div>
+          <div class="balance-pill owe" style="align-items:center;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:4px">👥</div>
+            <div class="balance-pill-label">Per Person</div>
+            <div class="balance-pill-amount" id="stats-per-person">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Spending Per Person</div>
+        <div id="per-person-stats"><div class="empty-state" style="padding:20px"><div>📊</div><p>Add expenses to see per-person stats</p></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">By Category</div>
+        <div id="cat-stats"><div class="empty-state" style="padding:20px"><div>🗂️</div><p>No data yet</p></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">By Payment Method</div>
+        <div id="payment-stats"><div class="empty-state" style="padding:20px"><div>💳</div><p>No data yet</p></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Full Settlement Plan</div>
+        <div id="full-settlements"><div class="empty-state" style="padding:20px"><div>🎉</div><p>All settled up!</p></div></div>
+      </div>
+
+    </div><!-- sec-stats -->
+
+    <!-- ══ SETTINGS / HELP ══ -->
+    <div id="sec-help" class="section">
+
+      <div class="card">
+        <div class="card-title">Settings</div>
+        <div class="setting-item" onclick="toggleTheme()">
+          <div class="setting-left">
+            <div class="setting-icon" id="theme-setting-icon">🌙</div>
+            <div><div class="setting-label">Theme</div><div class="setting-desc" id="theme-setting-desc">Currently: Dark Mode</div></div>
+          </div>
+          <div class="setting-value" id="theme-setting-val">Dark</div>
+        </div>
+        <div class="setting-item" onclick="openCurrencySelector()">
+          <div class="setting-left">
+            <div class="setting-icon">💱</div>
+            <div><div class="setting-label">Currency</div><div class="setting-desc">Expense display currency</div></div>
+          </div>
+          <div class="setting-value" id="currency-setting-val">₹ INR</div>
+        </div>
+        <div class="setting-item" onclick="showFirebaseSetup()">
+          <div class="setting-left">
+            <div class="setting-icon">☁️</div>
+            <div><div class="setting-label">Real-time Sync</div><div class="setting-desc" id="firebase-setting-desc">Configure Firebase for multi-user sharing</div></div>
+          </div>
+          <div class="setting-value" id="firebase-setting-val" style="color:var(--accent3)">Setup</div>
+        </div>
+        <div class="setting-item" onclick="openShareTrip()">
+          <div class="setting-left">
+            <div class="setting-icon">🔗</div>
+            <div><div class="setting-label">Share Trip</div><div class="setting-desc">Invite others with a code</div></div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-item" onclick="confirmEndTrip()">
+          <div class="setting-left">
+            <div class="setting-icon">⏹</div>
+            <div><div class="setting-label" style="color:var(--accent)">End Trip</div><div class="setting-desc">Mark trip as complete</div></div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">How to Use TripShare</div>
+        <div class="help-item"><div class="help-icon">➕</div><div class="help-text"><h4>Adding an Expense</h4><p>Tap <strong>+</strong> to add an expense. Select category, enter amount, choose who paid, pick payment method (Cash / UPI / Credit / Debit / Net Banking), and how to split.</p></div></div>
+        <div class="help-item"><div class="help-icon">🔗</div><div class="help-text"><h4>Sharing Your Trip</h4><p>Tap <strong>Share</strong> on the top bar to get the invite code. Your trip-mates enter this code to join — all expenses sync in real-time when Firebase is configured.</p></div></div>
+        <div class="help-item"><div class="help-icon">👥</div><div class="help-text"><h4>Managing Members</h4><p>Add all people on the trip. Each gets a colour-coded avatar. Members are used to track who paid and who owes.</p></div></div>
+        <div class="help-item"><div class="help-icon">💸</div><div class="help-text"><h4>Settle Up</h4><p>The app calculates the minimum number of payments needed. See <strong>Settle Up</strong> on the dashboard or the full plan in Stats.</p></div></div>
+        <div class="help-item"><div class="help-icon">📶</div><div class="help-text"><h4>Offline Mode</h4><p>Add expenses without internet. They sync automatically once you reconnect — nothing is lost.</p></div></div>
+        <div class="help-item"><div class="help-icon">⬅️</div><div class="help-text"><h4>Swipe to Delete</h4><p>Swipe left on any expense item to reveal the delete action.</p></div></div>
+        <div class="help-item"><div class="help-icon">🔐</div><div class="help-text"><h4>Biometric Lock</h4><p>The app uses your device's biometric / screen lock to protect access each time you open it.</p></div></div>
+        <div class="help-item"><div class="help-icon">🌍</div><div class="help-text"><h4>Currency & Localization</h4><p>Change currency in Settings. Supports INR, USD, EUR, GBP, AED, SGD and more. Numbers are formatted per locale.</p></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">About</div>
+        <div style="padding:10px 0;font-size:.82rem;color:var(--text2);line-height:1.8">
+          <strong style="color:var(--text)">TripShare v2.0</strong><br/>
+          Built for families and groups who travel together.<br/>
+          Real-time sync · Offline-first · PWA Ready<br/>
+          <span style="font-size:.72rem">Data stored locally + optional Firebase real-time sync.</span>
+        </div>
+      </div>
+
+    </div><!-- sec-help -->
+
+  </div><!-- app-shell -->
+
+  <button class="fab" onclick="openAddExpense()" title="Add Expense">＋</button>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home"     onclick="switchTab('sec-home')"><div class="nav-item-icon">🏠</div><div class="nav-item-label">Home</div></div>
+    <div class="nav-item"        id="nav-expenses" onclick="switchTab('sec-expenses')"><div class="nav-item-icon">📋</div><div class="nav-item-label">Expenses</div></div>
+    <div class="nav-item"        id="nav-stats"    onclick="switchTab('sec-stats')"><div class="nav-item-icon">📊</div><div class="nav-item-label">Stats</div></div>
+    <div class="nav-item"        id="nav-help"     onclick="switchTab('sec-help')"><div class="nav-item-icon">⚙️</div><div class="nav-item-label">Settings</div></div>
+  </nav>
+
+</div><!-- screen-app -->
+
+<!-- ═══════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════ -->
+
+<!-- ADD / EDIT EXPENSE -->
+<div class="modal-overlay" id="modal-expense" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="expense-modal-title">Add Expense</div>
+    <input type="hidden" id="editing-expense-id" value="" />
+
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="cat-pills" id="modal-cat-pills">
+        <div class="cat-pill active" data-cat="fuel"     data-icon="⛽" onclick="selectCat(this)"><div class="cat-pill-icon">⛽</div><div class="cat-pill-lbl">Fuel</div></div>
+        <div class="cat-pill" data-cat="food"     data-icon="🍽️"  onclick="selectCat(this)"><div class="cat-pill-icon">🍽️</div><div class="cat-pill-lbl">Food</div></div>
+        <div class="cat-pill" data-cat="hotel"    data-icon="🏨"  onclick="selectCat(this)"><div class="cat-pill-icon">🏨</div><div class="cat-pill-lbl">Hotel</div></div>
+        <div class="cat-pill" data-cat="toll"     data-icon="🛣️"  onclick="selectCat(this)"><div class="cat-pill-icon">🛣️</div><div class="cat-pill-lbl">Toll</div></div>
+        <div class="cat-pill" data-cat="activity" data-icon="🎢"  onclick="selectCat(this)"><div class="cat-pill-icon">🎢</div><div class="cat-pill-lbl">Activity</div></div>
+        <div class="cat-pill" data-cat="parking"  data-icon="🅿️"  onclick="selectCat(this)"><div class="cat-pill-icon">🅿️</div><div class="cat-pill-lbl">Parking</div></div>
+        <div class="cat-pill" data-cat="shop"     data-icon="🛍️"  onclick="selectCat(this)"><div class="cat-pill-icon">🛍️</div><div class="cat-pill-lbl">Shopping</div></div>
+        <div class="cat-pill" data-cat="medical"  data-icon="💊"  onclick="selectCat(this)"><div class="cat-pill-icon">💊</div><div class="cat-pill-lbl">Medical</div></div>
+        <div class="cat-pill" data-cat="other"    data-icon="📝"  onclick="selectCat(this)"><div class="cat-pill-icon">📝</div><div class="cat-pill-lbl">Other</div></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="expense-title" type="text" placeholder="e.g. Dinner at beach, Hotel Night 1..." />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Amount</label>
+        <input class="form-input" id="expense-amount" type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="expense-date" type="date" />
+      </div>
+    </div>
+    <div style="height:14px"></div>
+
+    <div class="form-group">
+      <label class="form-label">Paid By</label>
+      <div class="payer-chips" id="payer-chips"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Split</label>
+      <div class="split-toggle" id="split-toggle">
+        <div class="split-btn active" data-split="equal"  onclick="selectSplitType(this)">Equal</div>
+        <div class="split-btn"        data-split="payer"  onclick="selectSplitType(this)">Payer Only</div>
+        <div class="split-btn"        data-split="select" onclick="selectSplitType(this)">Select</div>
+      </div>
+      <div id="split-select-area" style="display:none;margin-top:10px">
+        <div class="payer-chips" id="split-member-chips"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <div class="pay-chips">
+        <div class="pay-chip active" data-method="cash"        onclick="selectPayMethod(this)">💵 Cash</div>
+        <div class="pay-chip"        data-method="upi"         onclick="selectPayMethod(this)">📱 UPI</div>
+        <div class="pay-chip"        data-method="credit_card" onclick="selectPayMethod(this)">💳 Credit</div>
+        <div class="pay-chip"        data-method="debit_card"  onclick="selectPayMethod(this)">🏧 Debit</div>
+        <div class="pay-chip"        data-method="netbanking"  onclick="selectPayMethod(this)">🏦 Net Banking</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input class="form-input" id="expense-note" placeholder="Any extra details..." />
+    </div>
+
+    <button class="btn-submit" id="expense-submit-btn" onclick="submitExpense()">Add Expense</button>
+  </div>
+</div>
+
+<!-- ADD MEMBER -->
+<div class="modal-overlay" id="modal-member" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Member</div>
+    <div class="modal-subtitle">Add everyone who is part of this trip</div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="member-name" type="text" placeholder="e.g. Priya, Rahul, Anita..." maxlength="30" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Group / Family (optional)</label>
+      <input class="form-input" id="member-group" type="text" placeholder="e.g. Your Family, Rahul's Family" maxlength="40" />
+    </div>
+    <button class="btn-submit" onclick="submitMember()">Add Member</button>
+  </div>
+</div>
+
+<!-- CREATE TRIP -->
+<div class="modal-overlay" id="modal-create-trip" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Create New Trip</div>
+    <div class="form-group">
+      <label class="form-label">Trip Name</label>
+      <input class="form-input" id="new-trip-name" type="text" placeholder="e.g. Goa Family Trip 2026" maxlength="50" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <input class="form-input" id="new-trip-desc" type="text" placeholder="e.g. 7 days, 2 families, beach vacation" maxlength="100" />
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Currency</label>
+        <select class="form-input" id="new-trip-currency">
+          <option value="INR">₹ INR — Indian Rupee</option>
+          <option value="USD">$ USD — US Dollar</option>
+          <option value="EUR">€ EUR — Euro</option>
+          <option value="GBP">£ GBP — British Pound</option>
+          <option value="AED">د.إ AED — UAE Dirham</option>
+          <option value="SGD">S$ SGD — Singapore Dollar</option>
+          <option value="AUD">A$ AUD — Australian Dollar</option>
+          <option value="CAD">C$ CAD — Canadian Dollar</option>
+          <option value="JPY">¥ JPY — Japanese Yen</option>
+          <option value="THB">฿ THB — Thai Baht</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" id="new-trip-date" type="date" />
+      </div>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn-submit" id="create-trip-btn" onclick="submitCreateTrip()">Create Trip →</button>
+  </div>
+</div>
+
+<!-- JOIN TRIP -->
+<div class="modal-overlay" id="modal-join-trip" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Join a Trip</div>
+    <div class="modal-subtitle">Enter the invite code from your trip organizer</div>
+    <div class="form-group">
+      <label class="form-label">Invite Code</label>
+      <input class="form-input" id="join-code" type="text" placeholder="e.g. GOAT-AB12"
+             maxlength="12" style="text-transform:uppercase;letter-spacing:3px;font-size:1.2rem;text-align:center;font-family:monospace"
+             oninput="this.value=this.value.toUpperCase()" />
+    </div>
+    <div id="join-error" style="color:var(--accent);font-size:.8rem;margin:-8px 0 10px;display:none"></div>
+    <button class="btn-submit" id="join-trip-btn" onclick="submitJoinTrip()">Join Trip →</button>
+    <p style="text-align:center;font-size:.75rem;color:var(--text3);margin-top:10px">Ask the trip creator to tap 🔗 Share to get the code</p>
+  </div>
+</div>
+
+<!-- SHARE TRIP -->
+<div class="modal-overlay" id="modal-share" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Share Trip</div>
+    <div class="modal-subtitle" id="share-trip-name">Trip</div>
+    <div class="invite-code-box">
+      <div class="invite-code-val" id="share-code-display">——</div>
+      <div class="invite-code-hint">Share this code with your trip-mates</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">
+        <button class="btn-copy" onclick="copyInviteCode()">📋 Copy Code</button>
+        <button class="btn-copy" onclick="copyShareLink()">🔗 Copy Link</button>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:10px 0 4px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:.7rem;color:var(--text3);flex-shrink:0">🔗</span>
+      <div id="share-link-display" style="font-size:.7rem;color:var(--primary);word-break:break-all;flex:1"></div>
+    </div>
+    <button class="btn-submit" id="btn-native-share" onclick="nativeShare()" style="margin-top:6px">📤 Share via WhatsApp / SMS</button>
+    <p style="font-size:.74rem;color:var(--text2);text-align:center;margin:8px 0 10px;line-height:1.7">
+      Anyone opening the link auto-joins the trip. Or share the code manually — they tap <strong>Join with Invite Code</strong>.
+    </p>
+    <div id="firebase-share-notice" style="background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);border-radius:12px;padding:12px;font-size:.78rem;color:var(--accent3);line-height:1.6;margin-bottom:10px;display:none">
+      ⚠️ <strong>Local mode:</strong> Real-time sharing needs Firebase.
+      <a href="#" onclick="showFirebaseSetup();closeModal('modal-share')" style="color:var(--accent3);font-weight:700">Set up Firebase →</a>
+    </div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-share')">Close</button>
+  </div>
+</div>
+
+<!-- FIREBASE SETUP -->
+<div class="modal-overlay" id="modal-firebase-setup" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔥 Enable Real-time Sync</div>
+    <div style="font-size:.83rem;color:var(--text2);line-height:1.8;margin-bottom:12px">
+      For multiple users to see expenses in real-time, set up <strong>Firebase Firestore</strong> (free — no account/login needed):
+    </div>
+    <div style="background:var(--surface2);border-radius:14px;padding:14px 16px;font-size:.8rem;line-height:2.1;border:1px solid var(--border)">
+      <strong style="color:var(--primary)">1.</strong> Go to <strong>console.firebase.google.com</strong><br/>
+      <strong style="color:var(--primary)">2.</strong> Click <strong>Add Project</strong> → name it (e.g. tripshare) → Create<br/>
+      <strong style="color:var(--primary)">3.</strong> Left sidebar → <strong>Build</strong> → <strong>Firestore Database</strong><br/>
+      <strong style="color:var(--primary)">4.</strong> Click <strong>Create database</strong> → choose <strong>Test mode</strong> → Done<br/>
+      <strong style="color:var(--primary)">5.</strong> Left sidebar → ⚙️ <strong>Project Settings</strong> → <strong>General</strong> tab<br/>
+      <strong style="color:var(--primary)">6.</strong> Scroll to <strong>Your apps</strong> → click <strong>&lt;/&gt; Web</strong> icon → Register<br/>
+      <strong style="color:var(--primary)">7.</strong> Copy the <code style="background:var(--surface3);padding:1px 6px;border-radius:4px">firebaseConfig</code> object shown<br/>
+      <strong style="color:var(--primary)">8.</strong> Open <strong>index.html</strong> → find <code style="background:var(--surface3);padding:1px 6px;border-radius:4px">FIREBASE_CONFIG</code> → paste your values ✅
+    </div>
+    <div style="margin-top:12px;background:var(--surface2);border-radius:12px;padding:12px;font-size:.75rem;color:var(--text3);border:1px solid var(--border);line-height:1.8">
+      💡 <strong>Tip:</strong> Use <code>npx serve .</code> or <code>npx http-server .</code> in the project folder to serve locally, or deploy to Netlify/Vercel for internet access.
+    </div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-firebase-setup')">Got it, close</button>
+  </div>
+</div>
+
+<!-- CURRENCY SELECTOR -->
+<div class="modal-overlay" id="modal-currency" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Select Currency</div>
+    <div id="currency-options" style="display:flex;flex-direction:column;gap:2px"></div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-currency')">Cancel</button>
+  </div>
+</div>
+
+<!-- TRANSFER OWNERSHIP MODAL -->
+<div class="modal-overlay" id="modal-transfer" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Transfer Admin</div>
+    <div class="modal-subtitle">Choose who will become the new trip admin. Only members who joined via invite can become admin.</div>
+    <div class="transfer-member-list" id="transfer-member-list"></div>
+    <button class="btn-submit" onclick="confirmTransferOwnership()">Transfer Ownership 👑</button>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-transfer');_transferTarget=null">Cancel</button>
+  </div>
+</div>
+
+<!-- EDIT TRIP DETAILS -->
+<div class="modal-overlay" id="modal-edit-trip" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Trip Details</div>
+    <div class="form-group">
+      <label class="form-label">Trip Name</label>
+      <input class="form-input" id="edit-trip-name-input" type="text" placeholder="Enter trip name" maxlength="60"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <input class="form-input" id="edit-trip-desc-input" type="text" placeholder="e.g. 7 days, beach vacation" maxlength="100"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" id="edit-trip-start-input" type="date"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">End Date (optional)</label>
+        <input class="form-input" id="edit-trip-end-input" type="date"/>
+      </div>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn-submit" onclick="saveEditTrip()">Save Changes</button>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-edit-trip')">Cancel</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title">Are you sure?</div>
+    <div class="confirm-msg"   id="confirm-msg">This action cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm-ok"     id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     FIREBASE SDK (v9 compat)
+═══════════════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- ═══════════════════════════════════════════════════
+     APPLICATION JAVASCRIPT
+═══════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────────────
+   FIREBASE CONFIGURATION
+   ▶ Replace these placeholder values with your Firebase
+     project config from console.firebase.google.com
+   ▶ See Settings → "Enable Real-time Sync" in the app
+     for step-by-step setup instructions.
+───────────────────────────────────────────────────── */
+const FIREBASE_CONFIG = {
+  apiKey:            "%%FIREBASE_API_KEY%%",
+  authDomain:        "%%FIREBASE_AUTH_DOMAIN%%",
+  projectId:         "%%FIREBASE_PROJECT_ID%%",
+  storageBucket:     "%%FIREBASE_STORAGE_BUCKET%%",
+  messagingSenderId: "%%FIREBASE_MESSAGING_SENDER_ID%%",
+  appId:             "%%FIREBASE_APP_ID%%"
+};
+const FIREBASE_ENABLED = !Object.values(FIREBASE_CONFIG)
+  .some(v => !v || v.startsWith('YOUR_') || v.startsWith('%%'));
+
+/* ─────────────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────────────── */
+const CURRENCIES = {
+  INR:{symbol:'₹', locale:'en-IN',  name:'Indian Rupee'},
+  USD:{symbol:'$', locale:'en-US',  name:'US Dollar'},
+  EUR:{symbol:'€', locale:'de-DE',  name:'Euro'},
+  GBP:{symbol:'£', locale:'en-GB',  name:'British Pound'},
+  AED:{symbol:'د.إ',locale:'ar-AE', name:'UAE Dirham'},
+  SGD:{symbol:'S$',locale:'en-SG',  name:'Singapore Dollar'},
+  AUD:{symbol:'A$',locale:'en-AU',  name:'Australian Dollar'},
+  CAD:{symbol:'C$',locale:'en-CA',  name:'Canadian Dollar'},
+  JPY:{symbol:'¥', locale:'ja-JP',  name:'Japanese Yen'},
+  THB:{symbol:'฿', locale:'th-TH',  name:'Thai Baht'},
+};
+
+const MEMBER_COLORS = [
+  'linear-gradient(135deg,#7c6aff,#a78bff)',
+  'linear-gradient(135deg,#ff6a8a,#ffb3c1)',
+  'linear-gradient(135deg,#35d07a,#7aedb3)',
+  'linear-gradient(135deg,#ffb347,#ffd07a)',
+  'linear-gradient(135deg,#4facfe,#a0c4ff)',
+  'linear-gradient(135deg,#f77062,#fe5196)',
+  'linear-gradient(135deg,#43e97b,#38f9d7)',
+  'linear-gradient(135deg,#fa709a,#fee140)',
+];
+
+const CAT_COLORS = {
+  fuel:'rgba(255,179,71,.18)',food:'rgba(255,106,138,.18)',
+  hotel:'rgba(124,106,255,.18)',toll:'rgba(53,208,122,.18)',
+  activity:'rgba(100,180,255,.18)',parking:'rgba(255,220,50,.18)',
+  shop:'rgba(200,100,255,.18)',medical:'rgba(255,80,80,.18)',
+  other:'rgba(150,150,200,.18)',
+};
+
+const PAY_LABELS = {
+  cash:'💵 Cash',upi:'📱 UPI',
+  credit_card:'💳 Credit',debit_card:'🏧 Debit',
+  netbanking:'🏦 Net Banking',
+};
+
+/* ─────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────── */
+const S = {
+  user:null, currentTripId:null,
+  trips:[], members:[], expenses:[],
+  isOnline:navigator.onLine,
+  currency:CURRENCIES['INR'], currencyCode:'INR',
+  filterCat:'all', filterSearch:'',
+};
+
+/* ─────────────────────────────────────────────────────
+   FIREBASE — Firestore only, no Auth required
+───────────────────────────────────────────────────── */
+let db=null, unsubExp=null, unsubMem=null;
+
+async function initFirebase(){
+  if(!FIREBASE_ENABLED) return false;
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.firestore();
+    // Enable offline persistence so Firestore works without internet
+    db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+      // Multiple tabs open — persistence disabled for extra tabs (harmless)
+      if(err.code!=='failed-precondition'&&err.code!=='unimplemented') console.warn(err);
+    });
+    document.getElementById('firebase-setting-desc').textContent='Real-time sync active ✅';
+    document.getElementById('firebase-setting-val').textContent='Active';
+    document.getElementById('firebase-setting-val').style.color='var(--accent2)';
+    document.getElementById('trips-sync-mode').textContent='Firebase sync';
+    return true;
+  }catch(e){ console.error('Firebase init failed:',e); return false; }
+}
+
+/* ─────────────────────────────────────────────────────
+   LOCAL STORAGE
+───────────────────────────────────────────────────── */
+const PFX='tripshare:';
+function lsSet(k,v){try{localStorage.setItem(PFX+k,JSON.stringify(v))}catch(e){}}
+function lsGet(k,d){try{const v=localStorage.getItem(PFX+k);return v!==null?JSON.parse(v):d}catch(e){return d}}
+function lsDel(k){localStorage.removeItem(PFX+k)}
+
+/* ─────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────── */
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
+function genCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s='';for(let i=0;i<8;i++){if(i===4)s+='-';s+=c[Math.floor(Math.random()*c.length)]}return s;
+}
+function fmt(n){
+  const{symbol,locale}=S.currency;
+  try{return symbol+new Intl.NumberFormat(locale,{minimumFractionDigits:0,maximumFractionDigits:2}).format(Math.abs(n))}
+  catch(e){return symbol+Math.abs(n).toFixed(0)}
+}
+function fmtDate(d){
+  if(!d)return'';
+  try{return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}catch(e){return d}
+}
+function memberColor(i){return MEMBER_COLORS[i%MEMBER_COLORS.length]}
+function memberInitials(n){return(n||'?').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()}
+function getMember(id){return S.members.find(m=>m.id===id)}
+function myMember(){return S.members.find(m=>m.userId===S.user.id)}
+function isCurrentUserAdmin(){
+  const trip=curTrip();if(!trip)return false;
+  return S.user.id===(trip.adminId||trip.createdBy);
+}
+function getTrip(id){return S.trips.find(t=>t.id===id)}
+function curTrip(){return getTrip(S.currentTripId)}
+
+/* ─────────────────────────────────────────────────────
+   DATA — TRIPS
+───────────────────────────────────────────────────── */
+async function loadTrips(){
+  const uid=S.user.id;
+  if(FIREBASE_ENABLED&&db){
+    try{
+      const ids=lsGet(`u:${uid}:trips`,[]);
+      const arr=[];
+      for(const id of ids){
+        const doc=await db.collection('trips').doc(id).get();
+        if(doc.exists)arr.push({id:doc.id,...doc.data()});
+      }
+      S.trips=arr;
+    }catch(e){ S.trips=lsGet(`u:${uid}:trips-data`,[]); }
+  }else{
+    S.trips=lsGet(`u:${uid}:trips-data`,[]);
+  }
+  renderTripsScreen();
+}
+
+async function createTrip(data){
+  const trip={
+    id:genId(),name:data.name,description:data.description||'',
+    status:'active',currency:data.currency||'INR',inviteCode:genCode(),
+    startDate:data.startDate||new Date().toISOString().split('T')[0],
+    createdBy:S.user.id,adminId:S.user.id,createdAt:Date.now(),totalExpenses:0,
+  };
+  if(FIREBASE_ENABLED&&db){
+    try{
+      await db.collection('trips').doc(trip.id).set(trip);
+      await db.collection('invites').doc(trip.inviteCode).set({tripId:trip.id,createdBy:S.user.id,createdAt:Date.now()});
+      await addMemberToTrip(trip.id,{name:S.user.name,color:S.user.color,userId:S.user.id});
+    }catch(e){}
+  }
+  S.trips.unshift(trip);
+  const uid=S.user.id;
+  const ids=lsGet(`u:${uid}:trips`,[]);
+  if(!ids.includes(trip.id))ids.unshift(trip.id);
+  lsSet(`u:${uid}:trips`,ids);
+  lsSet(`u:${uid}:trips-data`,S.trips);
+  lsSet(`invite:${trip.inviteCode}`,trip.id);
+  const creator={id:genId(),name:S.user.name,color:S.user.color,userId:S.user.id,group:'',createdAt:Date.now()};
+  lsSet(`trip:${trip.id}:members`,[creator]);
+  lsSet(`trip:${trip.id}:expenses`,[]);
+  lsSet(`trip:${trip.id}:meta`,trip);
+  return trip;
+}
+
+async function joinTrip(code){
+  const c=code.trim().toUpperCase();
+  let tripId=lsGet(`invite:${c}`,null);
+  if(!tripId&&FIREBASE_ENABLED&&db){
+    try{
+      const d=await db.collection('invites').doc(c).get();
+      if(d.exists){tripId=d.data().tripId;lsSet(`invite:${c}`,tripId);}
+    }catch(e){}
+  }
+  if(!tripId)return{success:false,error:'Invite code not found. Check the code and try again.'};
+  if(S.trips.some(t=>t.id===tripId))return{success:true,tripId,alreadyMember:true};
+
+  let trip=null;
+  if(FIREBASE_ENABLED&&db){
+    try{const d=await db.collection('trips').doc(tripId).get();if(d.exists)trip={id:d.id,...d.data()};}catch(e){}
+  }
+  if(!trip)trip=lsGet(`trip:${tripId}:meta`,null);
+  if(!trip)return{success:false,error:'Trip data not found. Make sure you are online and the organizer has set up Firebase.'};
+
+  await addMemberToTrip(tripId,{name:S.user.name,color:S.user.color,userId:S.user.id});
+  S.trips.unshift(trip);
+  const uid=S.user.id;
+  const ids=lsGet(`u:${uid}:trips`,[]);
+  if(!ids.includes(tripId))ids.unshift(tripId);
+  lsSet(`u:${uid}:trips`,ids);
+  lsSet(`u:${uid}:trips-data`,S.trips);
+  return{success:true,tripId};
+}
+
+async function endTrip(tripId){
+  const i=S.trips.findIndex(t=>t.id===tripId);
+  if(i!==-1){S.trips[i].status='ended';S.trips[i].endDate=new Date().toISOString().split('T')[0];}
+  lsSet(`u:${S.user.id}:trips-data`,S.trips);
+  if(i!==-1)lsSet(`trip:${tripId}:meta`,S.trips[i]);
+  if(FIREBASE_ENABLED&&db){
+    try{await db.collection('trips').doc(tripId).update({status:'ended',endDate:new Date().toISOString().split('T')[0]});}catch(e){}
+  }
+}
+async function reactivateTrip(tripId){
+  const i=S.trips.findIndex(t=>t.id===tripId);
+  if(i!==-1){S.trips[i].status='active';delete S.trips[i].endDate;}
+  lsSet(`u:${S.user.id}:trips-data`,S.trips);
+  if(i!==-1)lsSet(`trip:${tripId}:meta`,S.trips[i]);
+  if(FIREBASE_ENABLED&&db){
+    try{await db.collection('trips').doc(tripId).update({status:'active',endDate:null});}catch(e){}
+  }
+}
+function openEditTrip(){
+  const trip=curTrip();
+  if(!trip||!isCurrentUserAdmin())return;
+  document.getElementById('edit-trip-name-input').value=trip.name||'';
+  document.getElementById('edit-trip-desc-input').value=trip.description||'';
+  document.getElementById('edit-trip-start-input').value=trip.startDate||'';
+  document.getElementById('edit-trip-end-input').value=trip.endDate||'';
+  document.getElementById('modal-edit-trip').classList.add('open');
+  setTimeout(()=>document.getElementById('edit-trip-name-input').focus(),120);
+}
+async function saveEditTrip(){
+  const trip=curTrip();
+  if(!trip||!isCurrentUserAdmin())return;
+  const name=document.getElementById('edit-trip-name-input').value.trim();
+  const description=document.getElementById('edit-trip-desc-input').value.trim();
+  const startDate=document.getElementById('edit-trip-start-input').value||'';
+  const endDate=document.getElementById('edit-trip-end-input').value||'';
+  if(!name){showToast('⚠️ Trip name cannot be empty');return;}
+  const updates={name,description,startDate};
+  if(endDate)updates.endDate=endDate; else delete updates.endDate;
+  const i=S.trips.findIndex(t=>t.id===trip.id);
+  if(i!==-1)Object.assign(S.trips[i],updates);
+  if(i!==-1&&!endDate)delete S.trips[i].endDate;
+  lsSet(`u:${S.user.id}:trips-data`,S.trips);
+  if(i!==-1)lsSet(`trip:${trip.id}:meta`,S.trips[i]);
+  if(FIREBASE_ENABLED&&db){
+    const fbUp={name,description,startDate,endDate:endDate||null};
+    try{await db.collection('trips').doc(trip.id).update(fbUp);}catch(e){}
+  }
+  closeModal('modal-edit-trip');
+  renderDashboard();renderTripsScreen();showToast('✅ Trip details updated!');
+}
+
+/* ─────────────────────────────────────────────────────
+   DATA — MEMBERS
+───────────────────────────────────────────────────── */
+async function loadMembers(tripId){
+  if(FIREBASE_ENABLED&&db){
+    try{
+      const snap=await db.collection('trips').doc(tripId).collection('members').get();
+      S.members=snap.docs.map(d=>({id:d.id,...d.data()}));
+      lsSet(`trip:${tripId}:members`,S.members);return;
+    }catch(e){}
+  }
+  S.members=lsGet(`trip:${tripId}:members`,[]);
+}
+
+async function addMemberToTrip(tripId,data){
+  const m={id:genId(),name:data.name,color:data.color||memberColor(S.members.length),userId:data.userId||null,group:data.group||'',createdAt:Date.now()};
+  if(FIREBASE_ENABLED&&db){
+    try{await db.collection('trips').doc(tripId).collection('members').doc(m.id).set(m);}catch(e){}
+  }
+  const arr=lsGet(`trip:${tripId}:members`,[]);
+  arr.push(m);lsSet(`trip:${tripId}:members`,arr);
+  if(tripId===S.currentTripId){S.members=arr;renderMemberChips();populatePayerChips();}
+  return m;
+}
+
+/* ─────────────────────────────────────────────────────
+   DATA — EXPENSES
+───────────────────────────────────────────────────── */
+async function loadExpenses(tripId){
+  if(FIREBASE_ENABLED&&db){
+    try{
+      const snap=await db.collection('trips').doc(tripId).collection('expenses').orderBy('createdAt','desc').get();
+      S.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      lsSet(`trip:${tripId}:expenses`,S.expenses);return;
+    }catch(e){}
+  }
+  S.expenses=lsGet(`trip:${tripId}:expenses`,[]);
+}
+
+async function addExpense(tripId,data){
+  const exp={id:genId(),...data,createdBy:S.user.id,createdAt:Date.now()};
+  S.expenses.unshift(exp);
+  lsSet(`trip:${tripId}:expenses`,S.expenses);
+  syncTripTotal(tripId);renderAll();
+  if(FIREBASE_ENABLED&&db){
+    try{
+      await db.collection('trips').doc(tripId).collection('expenses').doc(exp.id).set(exp);
+      const trip=curTrip();
+      if(trip)await db.collection('trips').doc(tripId).update({totalExpenses:(trip.totalExpenses||0)+exp.amount});
+      setSyncStatus('synced');
+    }catch(e){addToQueue('add',exp,tripId);setSyncStatus('offline');}
+  }else if(!S.isOnline){addToQueue('add',exp,tripId);}
+  return exp;
+}
+
+async function deleteExpense(tripId,id){
+  S.expenses=S.expenses.filter(e=>e.id!==id);
+  lsSet(`trip:${tripId}:expenses`,S.expenses);
+  syncTripTotal(tripId);renderAll();
+  if(FIREBASE_ENABLED&&db){
+    try{await db.collection('trips').doc(tripId).collection('expenses').doc(id).delete();}
+    catch(e){addToQueue('delete',{id},tripId);}
+  }
+}
+
+function syncTripTotal(tripId){
+  const total=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const i=S.trips.findIndex(t=>t.id===tripId);
+  if(i!==-1){S.trips[i].totalExpenses=total;lsSet(`u:${S.user.id}:trips-data`,S.trips);}
+}
+
+/* ─────────────────────────────────────────────────────
+   REAL-TIME SUBSCRIPTIONS
+───────────────────────────────────────────────────── */
+function subscribeTrip(tripId){
+  if(!FIREBASE_ENABLED||!db)return;
+  if(unsubExp)unsubExp();if(unsubMem)unsubMem();
+  setSyncStatus('syncing');
+  unsubExp=db.collection('trips').doc(tripId).collection('expenses')
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap=>{
+      S.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      lsSet(`trip:${tripId}:expenses`,S.expenses);renderAll();setSyncStatus('synced');
+    },()=>setSyncStatus('offline'));
+  unsubMem=db.collection('trips').doc(tripId).collection('members')
+    .onSnapshot(snap=>{
+      S.members=snap.docs.map(d=>({id:d.id,...d.data()}));
+      lsSet(`trip:${tripId}:members`,S.members);renderMemberChips();populatePayerChips();
+    });
+}
+
+function unsubAll(){if(unsubExp){unsubExp();unsubExp=null;}if(unsubMem){unsubMem();unsubMem=null;}}
+
+/* ─────────────────────────────────────────────────────
+   OFFLINE QUEUE
+───────────────────────────────────────────────────── */
+function addToQueue(op,data,tripId){
+  const q=lsGet('offq',[]);q.push({op,data,tripId,ts:Date.now()});lsSet('offq',q);
+}
+async function processQueue(){
+  if(!FIREBASE_ENABLED||!db)return;
+  const q=lsGet('offq',[]);if(!q.length)return;
+  const rem=[];
+  for(const item of q){
+    try{
+      if(item.op==='add')await db.collection('trips').doc(item.tripId).collection('expenses').doc(item.data.id).set(item.data);
+      else if(item.op==='delete')await db.collection('trips').doc(item.tripId).collection('expenses').doc(item.data.id).delete();
+    }catch(e){rem.push(item);}
+  }
+  lsSet('offq',rem);
+  if(!rem.length){showToast('✅ All changes synced!');setSyncStatus('synced');}
+}
+
+/* ─────────────────────────────────────────────────────
+   BALANCE & SETTLEMENT CALCULATIONS
+───────────────────────────────────────────────────── */
+function calcBalances(){
+  const bal={};
+  S.members.forEach(m=>bal[m.id]=0);
+  for(const e of S.expenses){
+    if(!e.amount||!e.paidBy)continue;
+    const amt=parseFloat(e.amount);
+    if(bal.hasOwnProperty(e.paidBy))bal[e.paidBy]+=amt;
+    const split=e.splitBetween&&e.splitBetween.length>0?e.splitBetween:S.members.map(m=>m.id);
+    if(e.splitType==='payer'){
+      bal[e.paidBy]-=amt;
+    }else{
+      const share=amt/split.length;
+      split.forEach(id=>{if(bal.hasOwnProperty(id))bal[id]-=share;});
+    }
+  }
+  return bal;
+}
+
+function calcSettlements(){
+  const bal=calcBalances();
+  const cred=[],debt=[];
+  Object.entries(bal).forEach(([id,b])=>{
+    const r=Math.round(b*100)/100;
+    if(r>0.01)cred.push({id,amount:r});
+    if(r<-0.01)debt.push({id,amount:-r});
+  });
+  cred.sort((a,b)=>b.amount-a.amount);
+  debt.sort((a,b)=>b.amount-a.amount);
+  const res=[];let ci=0,di=0;
+  while(ci<cred.length&&di<debt.length){
+    const c=cred[ci],d=debt[di];
+    const a=Math.min(c.amount,d.amount);
+    res.push({from:d.id,to:c.id,amount:Math.round(a*100)/100});
+    c.amount-=a;d.amount-=a;
+    if(c.amount<0.01)ci++;if(d.amount<0.01)di++;
+  }
+  return res;
+}
+
+function myBalance(){
+  const me=S.members.find(m=>m.userId===S.user.id||m.name===S.user.name);
+  if(!me)return{owe:0,owed:0,oweTo:'—',owedFrom:'—'};
+  const setts=calcSettlements();
+  let owe=0,owed=0,oT=[],oF=[];
+  for(const s of setts){
+    if(s.from===me.id){owe+=s.amount;const m=getMember(s.to);if(m)oT.push(m.name);}
+    if(s.to===me.id){owed+=s.amount;const m=getMember(s.from);if(m)oF.push(m.name);}
+  }
+  return{owe,owed,oweTo:oT.join(', ')||'—',owedFrom:oF.join(', ')||'—'};
+}
+
+/* ─────────────────────────────────────────────────────
+   RENDERING
+───────────────────────────────────────────────────── */
+function renderAll(){renderDashboard();renderExpListFull();renderStats();}
+
+function renderDashboard(){
+  const trip=curTrip();if(!trip)return;
+  document.getElementById('hero-trip-name').textContent=trip.name;
+  document.getElementById('nav-trip-name').textContent=trip.name;
+  document.getElementById('hero-status-label').textContent=trip.status==='active'?'🌍 Active Trip':'⏹ Trip Ended';
+  const ended=trip.status==='ended';
+  const isAdmin=isCurrentUserAdmin();
+  const endBtn=document.getElementById('btn-end-trip');if(endBtn)endBtn.style.display=(!ended&&isAdmin)?'inline-block':'none';
+  const reactivateBtn=document.getElementById('btn-reactivate-trip');if(reactivateBtn)reactivateBtn.style.display=(ended&&isAdmin)?'inline-block':'none';
+  const editNameBtn=document.getElementById('btn-edit-trip-name');if(editNameBtn)editNameBtn.style.display=isAdmin?'inline-block':'none';
+  const fab=document.querySelector('.fab');if(fab)fab.style.display=ended?'none':'flex';
+  const start=trip.startDate?fmtDate(trip.startDate):'';
+  const end=trip.endDate?' – '+fmtDate(trip.endDate):'';
+  document.getElementById('hero-trip-sub').textContent=`${start}${end} · ${S.members.length} member${S.members.length!==1?'s':''}`;
+  const total=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const pp=S.members.length>0?total/S.members.length:0;
+  document.getElementById('stat-total').textContent=fmt(total);
+  document.getElementById('stat-per-person').textContent=fmt(pp);
+  document.getElementById('stat-count').textContent=S.expenses.length;
+  const{owe,owed,oweTo,owedFrom}=myBalance();
+  document.getElementById('bal-owe').textContent=owe>0?fmt(owe):'₹0';
+  document.getElementById('bal-owed').textContent=owed>0?fmt(owed):'₹0';
+  document.getElementById('bal-owe-to').textContent=owe>0?'to '+oweTo:'all clear! ✅';
+  document.getElementById('bal-owed-from').textContent=owed>0?'from '+owedFrom:'nothing pending';
+  renderSettlementsHome();
+  renderMemberChips();
+  renderExpList('expense-list-home',S.expenses.slice(0,4));
+}
+
+function renderSettlementsHome(){
+  const setts=calcSettlements();
+  const el=document.getElementById('settlements-list');
+  if(!setts.length){el.innerHTML='<div class="empty-state" style="padding:14px"><div>🎉</div><p style="font-size:.8rem;color:var(--text2)">All settled up! No outstanding balances.</p></div>';return;}
+  el.innerHTML=setts.map(s=>{
+    const f=getMember(s.from),t=getMember(s.to);if(!f||!t)return'';
+    const me=f.userId===S.user.id||f.name===S.user.name;
+    return`<div class="settlement-item">
+      <div class="settlement-avatar" style="background:${f.color||MEMBER_COLORS[0]}">${memberInitials(f.name)}</div>
+      <div class="settlement-text">
+        <strong>${f.name} → ${t.name}</strong>
+        <div class="settlement-sub">${me?'⚠️ You owe this amount':''}</div>
+      </div>
+      <div class="settlement-amount ${me?'':'ok'}">${fmt(s.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMemberChips(){
+  const el=document.getElementById('member-chips');if(!el)return;
+  const bal=calcBalances();
+  const amAdmin=isCurrentUserAdmin();
+  const trip=curTrip();
+  const adminUserId=trip?(trip.adminId||trip.createdBy):'';
+  el.innerHTML=S.members.map((m,i)=>{
+    const b=bal[m.id]||0;
+    const c=m.color||memberColor(i);
+    const isAdminMember=m.userId&&m.userId===adminUserId;
+    const isMe=m.userId&&m.userId===S.user.id;
+    const hasExp=S.expenses.some(e=>e.paidBy===m.id||(e.splitBetween&&e.splitBetween.includes(m.id)));
+    let actionBtn='';
+    if(isMe&&amAdmin){
+      actionBtn=`<div class="mc-action mc-transfer" onclick="openTransferOwnership(event)" title="Transfer admin & leave">🔄</div>`;
+    }else if(isMe&&!amAdmin){
+      actionBtn=`<div class="mc-action mc-leave" onclick="leaveTrip('${m.id}',event)" title="Leave this trip">↩</div>`;
+    }else if(amAdmin&&!isMe){
+      actionBtn=hasExp
+        ?`<div class="mc-delete" onclick="deleteMember('${m.id}',event)" title="Has expenses — delete expenses first">🔒</div>`
+        :`<div class="mc-delete" onclick="deleteMember('${m.id}',event)" title="Remove ${m.name}">×</div>`;
+    }
+    return`<div class="member-chip" id="mc-${m.id}">
+      <div class="member-avatar" style="background:${c}">${memberInitials(m.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="member-chip-name">${m.name}${isAdminMember?'<span class="mc-crown" title="Trip Admin">👑</span>':''}</div>
+        <div class="member-chip-share">${b>=0?'+':''}${fmt(b)}</div>
+      </div>
+      ${actionBtn}
+    </div>`;
+  }).join('')+`<div class="add-member-chip" onclick="openAddMember()">+ Add</div>`;
+}
+
+function renderExpList(containerId,items){
+  const el=document.getElementById(containerId);if(!el)return;
+  if(!items.length){el.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:30px">🧾</div><p>No expenses yet</p></div>';return;}
+  el.innerHTML=items.map(e=>{
+    const payer=getMember(e.paidBy);
+    const payerName=payer?payer.name:(e.paidBy||'Unknown');
+    const cc=CAT_COLORS[e.category]||CAT_COLORS['other'];
+    const pm=PAY_LABELS[e.paymentMethod]||'';
+    return`<div class="expense-item" id="exp-${e.id}" data-id="${e.id}"
+               ontouchstart="tsStart(event,'${e.id}')" ontouchend="tsEnd(event,'${e.id}')"
+               onclick="openEditExpense('${e.id}')">
+      <div class="expense-icon" style="background:${cc}">${e.icon||'📝'}</div>
+      <div class="expense-details">
+        <div class="expense-name">${e.title||'Expense'}</div>
+        <div class="expense-meta">${fmtDate(e.date)} · ${payerName}${pm?` <span class="pay-method-badge">${pm}</span>`:''}</div>
+      </div>
+      <div class="expense-amount">
+        <div class="expense-amount-val">${fmt(e.amount)}</div>
+        <div class="expense-amount-who">${e.splitType==='payer'?'solo':'split'}</div>
+      </div>
+      <div class="swipe-delete-hint" onclick="confirmDelExp(event,'${e.id}')">🗑️</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExpListFull(){
+  let items=[...S.expenses];
+  if(S.filterCat&&S.filterCat!=='all')items=items.filter(e=>e.category===S.filterCat);
+  if(S.filterSearch){const q=S.filterSearch.toLowerCase();items=items.filter(e=>{const p=getMember(e.paidBy);return(e.title||'').toLowerCase().includes(q)||(p&&p.name.toLowerCase().includes(q));});}
+  const ce=document.getElementById('expenses-count');if(ce)ce.textContent=`${items.length} Expense${items.length!==1?'s':''}`;
+  renderExpList('expense-list-full',items);
+}
+
+function renderStats(){
+  const total=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const pp=S.members.length>0?total/S.members.length:0;
+  const st=document.getElementById('stats-total'),sp=document.getElementById('stats-per-person');
+  if(st)st.textContent=fmt(total);if(sp)sp.textContent=fmt(pp);
+  renderPerPerson();renderCatStats();renderPayStats();renderFullSett();
+}
+
+function renderPerPerson(){
+  const el=document.getElementById('per-person-stats');if(!el)return;
+  const paid={};S.members.forEach(m=>paid[m.id]=0);
+  S.expenses.forEach(e=>{if(paid.hasOwnProperty(e.paidBy))paid[e.paidBy]+=(parseFloat(e.amount)||0);});
+  if(!S.members.length){el.innerHTML='<div class="empty-state" style="padding:20px"><div>📊</div><p>Add members and expenses</p></div>';return;}
+  const max=Math.max(...Object.values(paid),1);
+  const bal=calcBalances();
+  el.innerHTML=S.members.map((m,i)=>{
+    const p=paid[m.id]||0,b=bal[m.id]||0;
+    const c=m.color||memberColor(i);const pct=Math.round(p/max*100);
+    const bc=b>=0?'var(--accent2)':'var(--accent)';
+    return`<div class="stat-row">
+      <div class="stat-person">${m.name}</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span style="color:${bc};font-weight:700">${b>=0?'+':''}${fmt(b)}</span><span style="font-weight:700">${fmt(p)}</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:${c}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCatStats(){
+  const el=document.getElementById('cat-stats');if(!el)return;
+  const totals={};S.expenses.forEach(e=>{const c=e.category||'other';totals[c]=(totals[c]||0)+(parseFloat(e.amount)||0);});
+  const total=Object.values(totals).reduce((s,v)=>s+v,0);
+  if(!total){el.innerHTML='<div class="empty-state" style="padding:20px"><div>🗂️</div><p>No data yet</p></div>';return;}
+  const labels={fuel:{icon:'⛽',name:'Fuel'},food:{icon:'🍽️',name:'Food'},hotel:{icon:'🏨',name:'Hotel'},toll:{icon:'🛣️',name:'Toll'},activity:{icon:'🎢',name:'Activity'},parking:{icon:'🅿️',name:'Parking'},shop:{icon:'🛍️',name:'Shopping'},medical:{icon:'💊',name:'Medical'},other:{icon:'📝',name:'Other'}};
+  el.innerHTML=Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+    const l=labels[cat]||{icon:'📝',name:cat};const pct=Math.round(amt/total*100);
+    return`<div class="stat-row">
+      <div class="stat-person">${l.icon} ${l.name}</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span style="color:var(--text2)">${pct}%</span><span style="font-weight:700">${fmt(amt)}</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:linear-gradient(135deg,#7c6aff,#ff6a8a)"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPayStats(){
+  const el=document.getElementById('payment-stats');if(!el)return;
+  const totals={};S.expenses.forEach(e=>{const m=e.paymentMethod||'cash';totals[m]=(totals[m]||0)+(parseFloat(e.amount)||0);});
+  const total=Object.values(totals).reduce((s,v)=>s+v,0);
+  if(!total){el.innerHTML='<div class="empty-state" style="padding:20px"><div>💳</div><p>No data yet</p></div>';return;}
+  el.innerHTML=Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([method,amt])=>{
+    const l=PAY_LABELS[method]||method;const pct=Math.round(amt/total*100);
+    return`<div class="stat-row">
+      <div class="stat-person">${l}</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span style="color:var(--text2)">${pct}%</span><span style="font-weight:700">${fmt(amt)}</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:linear-gradient(135deg,#35d07a,#4facfe)"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFullSett(){
+  const el=document.getElementById('full-settlements');if(!el)return;
+  const setts=calcSettlements();
+  if(!setts.length){el.innerHTML='<div class="empty-state" style="padding:18px"><div>🎉</div><p>All settled up!</p></div>';return;}
+  el.innerHTML=setts.map(s=>{
+    const f=getMember(s.from),t=getMember(s.to);if(!f||!t)return'';
+    return`<div class="settlement-item">
+      <div class="settlement-avatar" style="background:${f.color||MEMBER_COLORS[0]}">${memberInitials(f.name)}</div>
+      <div class="settlement-text"><strong>${f.name} pays ${t.name}</strong><div class="settlement-sub">Recommended transfer</div></div>
+      <div class="settlement-amount">${fmt(s.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTripsScreen(){
+  const list=document.getElementById('trips-list');if(!list)return;
+  const name=S.user?S.user.name:'User';
+  const wm=document.getElementById('trips-welcome-msg');if(wm)wm.textContent=`Hey ${name}! Select a trip to get started.`;
+  const av=document.getElementById('trips-user-avatar'),nm=document.getElementById('trips-user-name');
+  if(av&&S.user){av.textContent=memberInitials(name);av.style.background=S.user.color||MEMBER_COLORS[0];}
+  if(nm&&S.user)nm.textContent=name;
+  if(!S.trips.length){
+    list.innerHTML=`<div class="trips-empty"><div class="empty-icon">✈️</div><h3>No trips yet</h3><p>Create a new trip to start tracking expenses,<br/>or join one with an invite code.</p></div>`;
+    return;
+  }
+  list.innerHTML=S.trips.map(trip=>{
+    const curr=CURRENCIES[trip.currency]||S.currency;
+    const totalStr=curr.symbol+(trip.totalExpenses||0).toLocaleString();
+    const sc=trip.status==='active'?'active':'ended';
+    const sl=trip.status==='active'?'● Active':'Ended';
+    return`<div class="trip-card" onclick="selectTrip('${trip.id}')">
+      <div class="trip-card-header"><div class="trip-card-icon">✈️</div><div class="trip-status-pill ${sc}">${sl}</div></div>
+      <div class="trip-card-name">${trip.name}</div>
+      <div class="trip-card-meta">${trip.description||'No description'}</div>
+      <div class="trip-card-stats">
+        <div class="trip-card-stat">Spent: <span>${totalStr}</span></div>
+        <div class="trip-card-stat">Code: <span style="font-family:monospace;letter-spacing:1px">${trip.inviteCode||'—'}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+  const notice=document.getElementById('trips-sync-notice');
+  if(notice)notice.style.display=FIREBASE_ENABLED?'none':'block';
+}
+
+/* ─────────────────────────────────────────────────────
+   SCREEN NAVIGATION
+───────────────────────────────────────────────────── */
+function showScreen(id){
+  const screens=['screen-lock','screen-auth','screen-trips','screen-app'];
+  screens.forEach(s=>{
+    const el=document.getElementById(s);if(!el)return;
+    el.style.display=(s===id)?(s==='screen-app'?'block':'flex'):'none';
+    if(s==='screen-trips')el.style.display=(s===id)?'block':'none';
+  });
+}
+
+function switchTab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);if(el)el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const map={'sec-home':'nav-home','sec-expenses':'nav-expenses','sec-stats':'nav-stats','sec-help':'nav-help'};
+  const nav=document.getElementById(map[id]);if(nav)nav.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='sec-expenses')renderExpListFull();
+  if(id==='sec-stats')renderStats();
+}
+
+function backToTrips(){
+  unsubAll();S.currentTripId=null;
+  // Always re-read trips from localStorage so status changes (e.g. end trip)
+  // are reflected even if Firestore hasn't propagated the update yet
+  if(S.user){const fresh=lsGet(`u:${S.user.id}:trips-data`,null);if(fresh)S.trips=fresh;}
+  showScreen('screen-trips');renderTripsScreen();
+}
+
+/* ─────────────────────────────────────────────────────
+   LOCK SCREEN
+───────────────────────────────────────────────────── */
+async function attemptBiometric(){
+  const ring=document.getElementById('biometric-ring');
+  const inner=document.getElementById('biometric-inner');
+  const hint=document.getElementById('lock-hint');
+  ring.classList.add('scanning');
+  inner.textContent='⏳';hint.textContent='Authenticating…';
+  if(window.PublicKeyCredential){
+    try{
+      const ok=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if(ok){await new Promise(r=>setTimeout(r,800));unlockSuccess();return;}
+    }catch(e){}
+  }
+  setTimeout(unlockSuccess,800);
+}
+
+function unlockSuccess(){
+  const lock=document.getElementById('screen-lock');
+  lock.style.transition='opacity .5s';lock.style.opacity='0';
+  setTimeout(()=>{lock.style.display='none';showToast('🔐 Authenticated!');onUnlocked();},500);
+}
+
+async function onUnlocked(){
+  const saved=lsGet('current-user',null);
+  if(saved&&saved.name){
+    S.user=saved;await initFirebase();await loadTrips();showScreen('screen-trips');
+    // Auto-open join modal if opened via invite link
+    const joinCode=new URLSearchParams(window.location.search).get('join');
+    if(joinCode){setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=joinCode.toUpperCase();},400);}
+  }
+  else{
+    showScreen('screen-auth');document.getElementById('screen-auth').style.display='flex';
+    // Carry forward join code to after auth
+    const joinCode=new URLSearchParams(window.location.search).get('join');
+    if(joinCode){sessionStorage.setItem('pendingJoin',joinCode);}
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────────────── */
+async function continueAsGuest(){
+  const ni=document.getElementById('auth-name');
+  const name=(ni.value||'').trim();
+  if(!name){showToast('⚠️ Please enter your name');ni.focus();return;}
+  const uid=genId();const ci=Math.floor(Math.random()*MEMBER_COLORS.length);
+  S.user={id:uid,name,color:MEMBER_COLORS[ci]};
+  lsSet('current-user',S.user);
+  await initFirebase();
+  if(FIREBASE_ENABLED&&auth&&auth.currentUser){S.user.uid=auth.currentUser.uid;lsSet('current-user',S.user);}
+  await loadTrips();showScreen('screen-trips');
+  // Apply any pending join code from before auth
+  const pc=sessionStorage.getItem('pendingJoin');
+  if(pc){sessionStorage.removeItem('pendingJoin');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
+}
+
+/* ─────────────────────────────────────────────────────
+   TRIPS ACTIONS
+───────────────────────────────────────────────────── */
+async function selectTrip(tripId){
+  S.currentTripId=tripId;
+  const trip=getTrip(tripId);
+  if(trip&&trip.currency&&CURRENCIES[trip.currency]){S.currency=CURRENCIES[trip.currency];S.currencyCode=trip.currency;}
+  showScreen('screen-app');switchTab('sec-home');
+  await loadMembers(tripId);await loadExpenses(tripId);
+  subscribeTrip(tripId);renderDashboard();renderStats();setSyncStatus('synced');
+  if(trip)lsSet(`trip:${tripId}:meta`,trip);
+}
+
+function openCreateTrip(){
+  document.getElementById('new-trip-date').value=new Date().toISOString().split('T')[0];
+  openModal('modal-create-trip');
+}
+
+async function submitCreateTrip(){
+  const name=document.getElementById('new-trip-name').value.trim();
+  const desc=document.getElementById('new-trip-desc').value.trim();
+  const currency=document.getElementById('new-trip-currency').value;
+  const startDate=document.getElementById('new-trip-date').value;
+  if(!name){showToast('⚠️ Enter a trip name');return;}
+  const btn=document.getElementById('create-trip-btn');
+  btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const trip=await createTrip({name,description:desc,currency,startDate});
+    closeModal('modal-create-trip');
+    document.getElementById('new-trip-name').value='';
+    document.getElementById('new-trip-desc').value='';
+    showToast(`✅ "${name}" created!`);
+    await selectTrip(trip.id);
+  }catch(e){showToast('❌ Failed. Try again.');}
+  finally{btn.disabled=false;btn.textContent='Create Trip →';}
+}
+
+function openJoinTrip(){
+  document.getElementById('join-code').value='';
+  document.getElementById('join-error').style.display='none';
+  openModal('modal-join-trip');
+}
+
+async function submitJoinTrip(){
+  const code=document.getElementById('join-code').value.trim();
+  if(!code){showToast('⚠️ Enter an invite code');return;}
+  const errEl=document.getElementById('join-error');errEl.style.display='none';
+  const btn=document.getElementById('join-trip-btn');btn.disabled=true;btn.textContent='Joining…';
+  try{
+    const res=await joinTrip(code);
+    if(res.success){
+      closeModal('modal-join-trip');
+      showToast(res.alreadyMember?'ℹ️ Already joined!':'✅ Joined trip!');
+      await selectTrip(res.tripId);
+    }else{errEl.textContent=res.error;errEl.style.display='block';}
+  }catch(e){errEl.textContent='An error occurred. Try again.';errEl.style.display='block';}
+  finally{btn.disabled=false;btn.textContent='Join Trip →';}
+}
+
+function showTripsMenu(){
+  showConfirm({
+    icon:'👤',title:'Account Options',
+    msg:`Signed in as: ${S.user?S.user.name:'Guest'}\n\nTap Sign Out to change your display name.`,
+    okLabel:'Sign Out',okClass:'danger',
+    onOk:()=>{lsDel('current-user');location.reload();}
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   EXPENSE MODAL
+───────────────────────────────────────────────────── */
+let selCat={cat:'fuel',icon:'⛽'},selSplit='equal',selPay='cash';
+
+function openAddExpense(){
+  const trip=curTrip();if(!trip)return;
+  if(trip.status==='ended'){showToast('⚠️ This trip has ended.');return;}
+  if(!S.members.length){showToast('⚠️ Add members first!');openAddMember();return;}
+  document.getElementById('expense-modal-title').textContent='Add Expense';
+  document.getElementById('editing-expense-id').value='';
+  document.getElementById('expense-title').value='';
+  document.getElementById('expense-amount').value='';
+  document.getElementById('expense-note').value='';
+  document.getElementById('expense-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('expense-submit-btn').textContent='Add Expense';
+  selectCatByKey('fuel');populatePayerChips(null);selectSplitByKey('equal',null);selectPayByKey('cash');
+  openModal('modal-expense');
+}
+
+function openEditExpense(id){
+  const e=S.expenses.find(x=>x.id===id);if(!e)return;
+  document.getElementById('expense-modal-title').textContent='Edit Expense';
+  document.getElementById('editing-expense-id').value=id;
+  document.getElementById('expense-title').value=e.title||'';
+  document.getElementById('expense-amount').value=e.amount||'';
+  document.getElementById('expense-note').value=e.note||'';
+  document.getElementById('expense-date').value=e.date||'';
+  document.getElementById('expense-submit-btn').textContent='Save Changes';
+  selectCatByKey(e.category||'fuel');
+  populatePayerChips(e.paidBy);
+  selectSplitByKey(e.splitType||'equal',e.splitBetween);
+  selectPayByKey(e.paymentMethod||'cash');
+  openModal('modal-expense');
+}
+
+function populatePayerChips(activePaidBy){
+  const c=document.getElementById('payer-chips');
+  c.innerHTML=S.members.map(m=>`<div class="payer-chip ${m.id===activePaidBy?'active':''}" data-id="${m.id}" onclick="c=this.closest('.payer-chips');c.querySelectorAll('.payer-chip').forEach(x=>x.classList.remove('active'));this.classList.add('active')">${m.name}</div>`).join('');
+  if(!activePaidBy){
+    const me=S.members.find(m=>m.userId===S.user.id||m.name===S.user.name);
+    const target=me?c.querySelector(`[data-id="${me.id}"]`):c.querySelector('.payer-chip');
+    if(target)target.classList.add('active');
+  }
+  document.getElementById('split-member-chips').innerHTML=S.members.map(m=>`<div class="payer-chip active" data-id="${m.id}" onclick="this.classList.toggle('active')">${m.name}</div>`).join('');
+}
+
+function selectCat(el){
+  document.querySelectorAll('#modal-cat-pills .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');selCat={cat:el.dataset.cat,icon:el.dataset.icon};
+}
+function selectCatByKey(key){
+  document.querySelectorAll('#modal-cat-pills .cat-pill').forEach(p=>{
+    const a=p.dataset.cat===key;p.classList.toggle('active',a);if(a)selCat={cat:key,icon:p.dataset.icon};
+  });
+}
+function selectSplitType(el){
+  document.querySelectorAll('#split-toggle .split-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');selSplit=el.dataset.split;
+  document.getElementById('split-select-area').style.display=selSplit==='select'?'block':'none';
+}
+function selectSplitByKey(key,between){
+  document.querySelectorAll('#split-toggle .split-btn').forEach(b=>b.classList.toggle('active',b.dataset.split===key));
+  selSplit=key;document.getElementById('split-select-area').style.display=key==='select'?'block':'none';
+  if(key==='select'&&between){document.querySelectorAll('#split-member-chips .payer-chip').forEach(c=>c.classList.toggle('active',between.includes(c.dataset.id)));}
+}
+function selectPayMethod(el){
+  document.querySelectorAll('.pay-chips .pay-chip').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');selPay=el.dataset.method;
+}
+function selectPayByKey(key){
+  document.querySelectorAll('.pay-chips .pay-chip').forEach(p=>p.classList.toggle('active',p.dataset.method===key));
+  selPay=key;
+}
+
+async function submitExpense(){
+  const editingId=document.getElementById('editing-expense-id').value;
+  const title=document.getElementById('expense-title').value.trim();
+  const amount=parseFloat(document.getElementById('expense-amount').value);
+  const note=document.getElementById('expense-note').value.trim();
+  const date=document.getElementById('expense-date').value;
+  if(!amount||amount<=0){showToast('⚠️ Enter a valid amount');return;}
+  const payerEl=document.querySelector('#payer-chips .payer-chip.active');
+  if(!payerEl){showToast('⚠️ Select who paid');return;}
+  const paidBy=payerEl.dataset.id;
+  let splitBetween=S.members.map(m=>m.id);
+  if(selSplit==='select'){
+    splitBetween=Array.from(document.querySelectorAll('#split-member-chips .payer-chip.active')).map(c=>c.dataset.id);
+    if(!splitBetween.length){showToast('⚠️ Select at least one member');return;}
+  }else if(selSplit==='payer'){splitBetween=[paidBy];}
+  const expData={
+    title:title||(selCat.cat.charAt(0).toUpperCase()+selCat.cat.slice(1)),
+    amount,category:selCat.cat,icon:selCat.icon,
+    paidBy,splitType:selSplit,splitBetween,
+    paymentMethod:selPay,date:date||new Date().toISOString().split('T')[0],note,
+  };
+  const tripId=S.currentTripId;
+  if(editingId){
+    const old=S.expenses.find(e=>e.id===editingId);
+    if(old){
+      const up={...old,...expData};
+      S.expenses=S.expenses.map(e=>e.id===editingId?up:e);
+      lsSet(`trip:${tripId}:expenses`,S.expenses);syncTripTotal(tripId);
+      if(FIREBASE_ENABLED&&db){try{await db.collection('trips').doc(tripId).collection('expenses').doc(editingId).update(expData);}catch(e){}}
+      showToast('✅ Expense updated!');
+    }
+  }else{await addExpense(tripId,expData);showToast(`✅ ${fmt(amount)} added!`);}
+  closeModal('modal-expense');renderAll();
+}
+
+/* ─────────────────────────────────────────────────────
+   MEMBER MODAL
+───────────────────────────────────────────────────── */
+function openAddMember(){document.getElementById('member-name').value='';document.getElementById('member-group').value='';openModal('modal-member');}
+async function submitMember(){
+  const name=document.getElementById('member-name').value.trim();
+  const group=document.getElementById('member-group').value.trim();
+  if(!name){showToast('⚠️ Enter a name');return;}
+  if(S.members.some(m=>m.name.toLowerCase()===name.toLowerCase())){showToast('⚠️ Already added');return;}
+  await addMemberToTrip(S.currentTripId,{name,color:memberColor(S.members.length),group});
+  closeModal('modal-member');showToast(`✅ ${name} added!`);renderDashboard();
+}
+
+function deleteMember(memberId, event){
+  event.stopPropagation();
+  if(!isCurrentUserAdmin()){showToast('⚠️ Only the trip admin can remove members');return;}
+  const member=getMember(memberId);if(!member)return;
+  if(member.userId===S.user.id){showToast('Use the 🔄 button to transfer admin and leave');return;}
+  // Block deletion if member is referenced in any expense
+  const hasExp=S.expenses.some(e=>
+    e.paidBy===memberId||(e.splitBetween&&e.splitBetween.includes(memberId))
+  );
+  if(hasExp){
+    showConfirm({
+      icon:'⚠️',title:'Cannot Remove Member',
+      msg:`${member.name} is linked to one or more expenses. Delete those expenses first, then remove this member.`,
+      okLabel:'OK',okClass:'primary',
+      onOk:()=>{}
+    });
+    return;
+  }
+  showConfirm({
+    icon:'👤',title:`Remove ${member.name}?`,
+    msg:`Remove ${member.name} from this trip? This cannot be undone.`,
+    okLabel:'Remove',okClass:'danger',
+    onOk:async()=>{
+      S.members=S.members.filter(m=>m.id!==memberId);
+      lsSet(`trip:${S.currentTripId}:members`,S.members);
+      if(FIREBASE_ENABLED&&db){
+        try{await db.collection('trips').doc(S.currentTripId).collection('members').doc(memberId).delete();}catch(e){}
+      }
+      showToast(`✅ ${member.name} removed`);
+      renderDashboard();populatePayerChips();
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   TRANSFER OWNERSHIP
+───────────────────────────────────────────────────── */
+let _transferTarget=null;
+
+function openTransferOwnership(event){
+  event.stopPropagation();
+  // Only members with a userId (joined via invite) can become admin
+  const candidates=S.members.filter(m=>m.userId&&m.userId!==S.user.id);
+  if(!candidates.length){
+    showToast('⚠️ No other joined users to transfer to. They must join via invite code first.');
+    return;
+  }
+  _transferTarget=null;
+  const list=document.getElementById('transfer-member-list');
+  list.innerHTML=candidates.map(m=>`
+    <div class="transfer-member-item" onclick="selectTransferMember('${m.id}',this)">
+      <div class="member-avatar" style="background:${m.color||memberColor(0)}">${memberInitials(m.name)}</div>
+      <span>${m.name}</span>
+    </div>`).join('');
+  openModal('modal-transfer');
+}
+
+function selectTransferMember(memberId,el){
+  _transferTarget=memberId;
+  document.querySelectorAll('.transfer-member-item').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function confirmTransferOwnership(){
+  if(!_transferTarget){showToast('⚠️ Select a member first');return;}
+  const newAdminMember=getMember(_transferTarget);if(!newAdminMember)return;
+  const newAdminUserId=newAdminMember.userId;
+  const trip=curTrip();if(!trip)return;
+  const myMem=myMember();
+  // Update adminId in state + persistence
+  trip.adminId=newAdminUserId;
+  if(FIREBASE_ENABLED&&db){
+    try{await db.collection('trips').doc(S.currentTripId).update({adminId:newAdminUserId});}catch(e){}
+  }
+  const uid=S.user.id;
+  const trips=lsGet(`u:${uid}:trips-data`,[]);
+  const idx=trips.findIndex(t=>t.id===S.currentTripId);
+  if(idx!==-1){trips[idx].adminId=newAdminUserId;lsSet(`u:${uid}:trips-data`,trips);}
+  lsSet(`trip:${S.currentTripId}:meta`,trip);
+  closeModal('modal-transfer');
+  _transferTarget=null;
+  showToast(`👑 ${newAdminMember.name} is now the trip admin`);
+  // Offer to leave the trip after transferring
+  if(myMem){
+    const hasMyExp=S.expenses.some(e=>e.paidBy===myMem.id||(e.splitBetween&&e.splitBetween.includes(myMem.id)));
+    if(hasMyExp){
+      renderDashboard();
+      showToast(`👑 Admin transferred. You still have expenses so you remain a member.`);
+    }else{
+      showConfirm({
+        icon:'↩️',title:'Leave Trip?',
+        msg:`You are no longer admin. Do you also want to leave "${trip.name}"?`,
+        okLabel:'Leave Trip',okClass:'danger',
+        onOk:async()=>{
+          S.members=S.members.filter(m=>m.id!==myMem.id);
+          lsSet(`trip:${S.currentTripId}:members`,S.members);
+          if(FIREBASE_ENABLED&&db){
+            try{await db.collection('trips').doc(S.currentTripId).collection('members').doc(myMem.id).delete();}catch(e){}
+          }
+          showToast('You have left the trip');
+          showScreen('screen-trips');loadTrips();
+        }
+      });
+    }
+  }else{
+    renderDashboard();
+  }
+}
+
+function leaveTrip(memberId, event){
+  event.stopPropagation();
+  if(isCurrentUserAdmin()){
+    showToast('⚠️ Transfer admin to someone else before leaving');
+    return;
+  }
+  const member=getMember(memberId);if(!member)return;
+  const hasExp=S.expenses.some(e=>e.paidBy===memberId||(e.splitBetween&&e.splitBetween.includes(memberId)));
+  if(hasExp){
+    showConfirm({
+      icon:'⚠️',title:'Cannot Leave Trip',
+      msg:`You have expenses in this trip. Remove your expenses before leaving.`,
+      okLabel:'OK',okClass:'primary',onOk:()=>{}
+    });
+    return;
+  }
+  showConfirm({
+    icon:'↩️',title:'Leave Trip?',
+    msg:`Leave "${curTrip()?.name}"? This removes you from the member list. This cannot be undone.`,
+    okLabel:'Leave',okClass:'danger',
+    onOk:async()=>{
+      S.members=S.members.filter(m=>m.id!==memberId);
+      lsSet(`trip:${S.currentTripId}:members`,S.members);
+      if(FIREBASE_ENABLED&&db){
+        try{await db.collection('trips').doc(S.currentTripId).collection('members').doc(memberId).delete();}catch(e){}
+      }
+      showToast('You have left the trip');
+      showScreen('screen-trips');loadTrips();
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   SHARE TRIP
+───────────────────────────────────────────────────── */
+function openShareTrip(){
+  const trip=curTrip();
+  if(!trip){showToast('⚠️ No trip selected');return;}
+  const code=trip.inviteCode||'N/A';
+  document.getElementById('share-trip-name').textContent=trip.name;
+  document.getElementById('share-code-display').textContent=code;
+  const baseUrl=window.location.href.split('?')[0];
+  const link=baseUrl+'?join='+code;
+  document.getElementById('share-link-display').textContent=link;
+  document.getElementById('share-link-display').title=link;
+  // Show native share button only if API is available
+  const nb=document.getElementById('btn-native-share');
+  if(nb)nb.style.display=navigator.share?'block':'none';
+  const ne=document.getElementById('firebase-share-notice');if(ne)ne.style.display=FIREBASE_ENABLED?'none':'block';
+  openModal('modal-share');
+}
+function copyInviteCode(){
+  const code=document.getElementById('share-code-display').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(code).then(()=>showToast('📋 Code copied!'));}
+  else{
+    const el=document.createElement('input');el.value=code;document.body.appendChild(el);
+    el.select();document.execCommand('copy');document.body.removeChild(el);showToast('📋 Code copied!');
+  }
+}
+function copyShareLink(){
+  const link=document.getElementById('share-link-display').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(link).then(()=>showToast('🔗 Link copied!'));}
+  else{
+    const el=document.createElement('input');el.value=link;document.body.appendChild(el);
+    el.select();document.execCommand('copy');document.body.removeChild(el);showToast('🔗 Link copied!');
+  }
+}
+async function nativeShare(){
+  const trip=curTrip();if(!trip)return;
+  const code=document.getElementById('share-code-display').textContent;
+  const link=document.getElementById('share-link-display').textContent;
+  const text=`Join me on TripShare for "${trip.name}"!\n\nOpen the link to join:\n${link}\n\nOr use invite code: ${code}`;
+  if(navigator.share){
+    try{await navigator.share({title:'Join '+trip.name+' on TripShare',text,url:link});}
+    catch(e){if(e.name!=='AbortError')copyShareLink();}
+  }else{copyShareLink();}
+}
+
+/* ─────────────────────────────────────────────────────
+   END TRIP
+───────────────────────────────────────────────────── */
+function confirmEndTrip(){
+  const trip=curTrip();
+  if(!trip){showToast('⚠️ No trip selected');return;}
+  if(trip.status==='ended'){showToast('This trip is already ended.');return;}
+  showConfirm({
+    icon:'⏹',title:'End Trip?',
+    msg:`End "${trip.name}"? Expenses can still be viewed but not added.`,
+    okLabel:'End Trip',okClass:'danger',
+    onOk:async()=>{await endTrip(trip.id);renderDashboard();renderTripsScreen();showToast('✅ Trip ended! 🚗');}
+  });
+}
+function confirmReactivateTrip(){
+  const trip=curTrip();
+  if(!trip){showToast('⚠️ No trip selected');return;}
+  if(trip.status==='active'){showToast('This trip is already active.');return;}
+  showConfirm({
+    icon:'▶',title:'Re-Activate Trip?',
+    msg:`Re-activate "${trip.name}"? Members will be able to add expenses again.`,
+    okLabel:'Re-Activate',okClass:'primary',
+    onOk:async()=>{await reactivateTrip(trip.id);renderDashboard();renderTripsScreen();showToast('✅ Trip re-activated! 🎉');}
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   DELETE EXPENSE
+───────────────────────────────────────────────────── */
+function confirmDelExp(event,id){
+  event.stopPropagation();
+  const e=S.expenses.find(x=>x.id===id);
+  showConfirm({
+    icon:'🗑️',title:'Delete Expense?',
+    msg:e?`Delete "${e.title}" (${fmt(e.amount)})?`:'Delete this expense?',
+    okLabel:'Delete',okClass:'danger',
+    onOk:async()=>{await deleteExpense(S.currentTripId,id);showToast('🗑️ Deleted');}
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   SWIPE TO DELETE
+───────────────────────────────────────────────────── */
+let tsX=0;
+function tsStart(e,id){tsX=e.touches[0].clientX;}
+function tsEnd(e,id){
+  const diff=tsX-e.changedTouches[0].clientX;
+  const el=document.getElementById('exp-'+id);if(!el)return;
+  if(diff>60)el.classList.add('swiped');
+  else if(diff<-20)el.classList.remove('swiped');
+}
+
+/* ─────────────────────────────────────────────────────
+   SEARCH & FILTER
+───────────────────────────────────────────────────── */
+function filterExpenses(q){
+  S.filterSearch=q;
+  const clr=document.getElementById('search-clear');if(clr)clr.style.display=q?'block':'none';
+  renderExpListFull();
+}
+function clearSearch(){const i=document.getElementById('search-input');if(i)i.value='';filterExpenses('');}
+function filterCat(el,cat){
+  document.querySelectorAll('#filter-cats .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');S.filterCat=cat;renderExpListFull();
+}
+
+/* ─────────────────────────────────────────────────────
+   CURRENCY SELECTOR
+───────────────────────────────────────────────────── */
+function openCurrencySelector(){
+  const c=document.getElementById('currency-options');
+  c.innerHTML=Object.entries(CURRENCIES).map(([code,info])=>`
+    <div class="setting-item" onclick="selectCurrency('${code}')">
+      <div class="setting-left">
+        <div style="font-size:1.1rem;width:36px;text-align:center">${info.symbol}</div>
+        <div><div class="setting-label">${code}</div><div class="setting-desc">${info.name}</div></div>
+      </div>
+      ${S.currencyCode===code?'<div style="color:var(--primary);font-weight:700">✓</div>':''}
+    </div>`).join('');
+  openModal('modal-currency');
+}
+function selectCurrency(code){
+  S.currency=CURRENCIES[code];S.currencyCode=code;lsSet('currency',code);
+  const v=document.getElementById('currency-setting-val');if(v)v.textContent=`${CURRENCIES[code].symbol} ${code}`;
+  closeModal('modal-currency');renderAll();showToast(`💱 Currency: ${code}`);
+}
+
+/* ─────────────────────────────────────────────────────
+   THEME
+───────────────────────────────────────────────────── */
+function toggleTheme(){
+  const html=document.documentElement;
+  const dark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',dark?'light':'dark');
+  lsSet('theme',dark?'light':'dark');
+  document.querySelectorAll('#theme-btn,#screen-trips .btn-icon').forEach(el=>el.textContent=dark?'🌙':'☀️');
+  const ti=document.getElementById('theme-setting-icon'),td=document.getElementById('theme-setting-desc'),tv=document.getElementById('theme-setting-val');
+  if(ti)ti.textContent=dark?'☀️':'🌙';
+  if(td)td.textContent=`Currently: ${dark?'Light':'Dark'} Mode`;
+  if(tv)tv.textContent=dark?'Light':'Dark';
+  showToast(dark?'☀️ Light mode':'🌙 Dark mode');
+}
+
+/* ─────────────────────────────────────────────────────
+   SYNC STATUS
+───────────────────────────────────────────────────── */
+function setSyncStatus(s){
+  const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');if(!dot||!lbl)return;
+  dot.className='sync-dot';
+  if(s==='synced'){lbl.textContent='Synced';}
+  if(s==='syncing'){dot.classList.add('syncing');lbl.textContent='Syncing…';}
+  if(s==='offline'){dot.classList.add('offline');lbl.textContent='Offline';}
+}
+
+/* ─────────────────────────────────────────────────────
+   MODALS
+───────────────────────────────────────────────────── */
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+function closeModalOutside(e){if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');}
+function showFirebaseSetup(){openModal('modal-firebase-setup');}
+
+/* ─────────────────────────────────────────────────────
+   CONFIRM DIALOG
+───────────────────────────────────────────────────── */
+let confirmCb=null;
+function showConfirm({icon,title,msg,okLabel='Confirm',okClass='danger',onOk}){
+  document.getElementById('confirm-icon').textContent=icon||'⚠️';
+  document.getElementById('confirm-title').textContent=title||'Confirm';
+  document.getElementById('confirm-msg').textContent=msg||'';
+  const ob=document.getElementById('confirm-ok-btn');
+  ob.textContent=okLabel;ob.className='btn-confirm-ok'+(okClass==='primary'?' primary':'');
+  confirmCb=onOk;document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirm-modal').classList.remove('open');confirmCb=null;}
+document.getElementById('confirm-ok-btn').onclick=function(){const cb=confirmCb;closeConfirm();if(cb)cb();};
+
+/* ─────────────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────────────── */
+let toastTmr;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ─────────────────────────────────────────────────────
+   ONLINE / OFFLINE
+───────────────────────────────────────────────────── */
+window.addEventListener('online',()=>{
+  S.isOnline=true;setSyncStatus('syncing');
+  document.getElementById('offline-banner').classList.add('hidden');
+  processQueue();
+});
+window.addEventListener('offline',()=>{
+  S.isOnline=false;setSyncStatus('offline');
+  document.getElementById('offline-banner').classList.remove('hidden');
+});
+
+/* ─────────────────────────────────────────────────────
+   SERVICE WORKER
+───────────────────────────────────────────────────── */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(r=>console.log('SW:',r.scope))
+      .catch(e=>console.log('SW failed:',e));
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
+function init(){
+  const theme=lsGet('theme','dark');
+  document.documentElement.setAttribute('data-theme',theme);
+  const curr=lsGet('currency','INR');
+  if(CURRENCIES[curr]){S.currency=CURRENCIES[curr];S.currencyCode=curr;}
+
+  const dark=theme==='dark';
+  document.querySelectorAll('#theme-btn').forEach(el=>el.textContent=dark?'🌙':'☀️');
+  const ti=document.getElementById('theme-setting-icon'),td=document.getElementById('theme-setting-desc'),tv=document.getElementById('theme-setting-val');
+  if(ti)ti.textContent=dark?'🌙':'☀️';if(td)td.textContent=`Currently: ${dark?'Dark':'Light'} Mode`;if(tv)tv.textContent=dark?'Dark':'Light';
+  const cv=document.getElementById('currency-setting-val');if(cv)cv.textContent=`${S.currency.symbol} ${S.currencyCode}`;
+  const ed=document.getElementById('expense-date');if(ed)ed.value=new Date().toISOString().split('T')[0];
+  if(!navigator.onLine){S.isOnline=false;const ob=document.getElementById('offline-banner');if(ob)ob.classList.remove('hidden');}
+}
+init();
+</script>
+</body>
+</html>
