@@ -1178,12 +1178,10 @@ async function loadTrips(){
   if(FIREBASE_ENABLED&&db){
     try{
       const ids=lsGet(`u:${uid}:trips`,[]);
-      const arr=[];
-      for(const id of ids){
-        const doc=await db.collection('trips').doc(id).get();
-        if(doc.exists)arr.push({id:doc.id,...doc.data()});
-      }
-      S.trips=arr;
+      // Fetch all trips in parallel instead of one-by-one
+      const docs=await Promise.all(ids.map(id=>db.collection('trips').doc(id).get()));
+      S.trips=docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()}));
+      lsSet(`u:${uid}:trips-data`,S.trips);
     }catch(e){ S.trips=lsGet(`u:${uid}:trips-data`,[]); }
   }else{
     S.trips=lsGet(`u:${uid}:trips-data`,[]);
@@ -1769,16 +1767,21 @@ async function onUnlocked(){
 async function continueAsGuest(){
   const ni=document.getElementById('auth-name');
   const name=(ni.value||'').trim();
-  if(!name){showToast('⚠️ Please enter your name');ni.focus();return;}
+  if(!name){showToast('\u26a0\ufe0f Please enter your name');ni.focus();return;}
   const uid=genId();const ci=Math.floor(Math.random()*MEMBER_COLORS.length);
   S.user={id:uid,name,color:MEMBER_COLORS[ci]};
   lsSet('current-user',S.user);
-  await initFirebase();
-  if(FIREBASE_ENABLED&&auth&&auth.currentUser){S.user.uid=auth.currentUser.uid;lsSet('current-user',S.user);}
-  await loadTrips();showScreen('screen-trips');
-  // Apply any pending join code from before auth
+  // Show trips screen INSTANTLY with local data — don't wait for Firebase
+  S.trips=lsGet(`u:${uid}:trips-data`,[]);
+  showScreen('screen-trips');renderTripsScreen();
+  // Apply any pending join code
   const pc=sessionStorage.getItem('pendingJoin');
   if(pc){sessionStorage.removeItem('pendingJoin');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
+  // Firebase init + sync happens in background
+  initFirebase().then(()=>{
+    if(FIREBASE_ENABLED&&auth&&auth.currentUser){S.user.uid=auth.currentUser.uid;lsSet('current-user',S.user);}
+    loadTrips();
+  });
 }
 
 /* ─────────────────────────────────────────────────────
