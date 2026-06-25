@@ -444,7 +444,27 @@ select.form-input{cursor:pointer}
 .btn-confirm-cancel{flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-confirm-ok{flex:1;padding:12px;background:var(--accent);border:none;color:#fff;border-radius:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-confirm-ok.primary{background:var(--primary)}
-
+.checklist-progress-wrap{margin-bottom:14px}
+.checklist-progress-info{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text2);margin-bottom:5px;font-weight:600}
+.checklist-progress{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+.checklist-progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent2));border-radius:99px;transition:width .35s}
+#checklist-container{max-height:400px;overflow-y:auto;scroll-behavior:smooth}
+#checklist-container::-webkit-scrollbar{width:3px}
+#checklist-container::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.checklist-cat{margin-bottom:6px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.checklist-cat-header{color:#fff;font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.checklist-cat-header-right{display:flex;align-items:center;gap:8px;opacity:.95}
+.checklist-cat-count{background:rgba(255,255,255,.22);border-radius:99px;padding:1px 8px;font-size:.68rem;font-weight:700}
+.checklist-cat-chevron{font-size:.85rem;transition:transform .25s;display:inline-block}
+.checklist-cat.open .checklist-cat-chevron{transform:rotate(180deg)}
+.checklist-cat-body{display:none;padding:0 6px 4px}
+.checklist-cat.open .checklist-cat-body{display:block}
+.checklist-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s;border-radius:6px}
+.checklist-row:last-child{border-bottom:none}
+.checklist-row:active{background:var(--surface2)}
+.checklist-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+.checklist-row span{font-size:.83rem;color:var(--text);transition:color .2s}
+.checklist-row input[type=checkbox]:checked + span{color:var(--text3);text-decoration:line-through}
 @media(max-width:480px){.app-shell{max-width:100%}.bottom-nav{left:0;transform:none;width:100%}}
 </style>
 </head>
@@ -797,15 +817,24 @@ window.addEventListener('appinstalled',function(){
 
     </div><!-- sec-help -->
 
+    <!-- ══ CHECKLIST ══ -->
+    <div id="sec-checklist" class="section">
+      <div class="card">
+        <div class="card-title">🧳 Trip Checklist <span class="card-title-action" onclick="resetChecklist()">Reset All</span></div>
+        <div id="checklist-container"><div style="text-align:center;padding:20px;color:var(--text2);font-size:.85rem">⚙️ Open a trip to see your checklist</div></div>
+      </div>
+    </div><!-- sec-checklist -->
+
   </div><!-- app-shell -->
 
   <button class="fab" onclick="openAddExpense()" title="Add Expense">＋</button>
 
   <nav class="bottom-nav">
-    <div class="nav-item active" id="nav-home"     onclick="switchTab('sec-home')"><div class="nav-item-icon">🏠</div><div class="nav-item-label">Home</div></div>
-    <div class="nav-item"        id="nav-expenses" onclick="switchTab('sec-expenses')"><div class="nav-item-icon">📋</div><div class="nav-item-label">Expenses</div></div>
-    <div class="nav-item"        id="nav-stats"    onclick="switchTab('sec-stats')"><div class="nav-item-icon">📊</div><div class="nav-item-label">Stats</div></div>
-    <div class="nav-item"        id="nav-help"     onclick="switchTab('sec-help')"><div class="nav-item-icon">⚙️</div><div class="nav-item-label">Settings</div></div>
+    <div class="nav-item active" id="nav-home"      onclick="switchTab('sec-home')"><div class="nav-item-icon">🏠</div><div class="nav-item-label">Home</div></div>
+    <div class="nav-item"        id="nav-expenses"  onclick="switchTab('sec-expenses')"><div class="nav-item-icon">📋</div><div class="nav-item-label">Expenses</div></div>
+    <div class="nav-item"        id="nav-stats"     onclick="switchTab('sec-stats')"><div class="nav-item-icon">📊</div><div class="nav-item-label">Stats</div></div>
+    <div class="nav-item"        id="nav-checklist" onclick="switchTab('sec-checklist')"><div class="nav-item-icon">🧳</div><div class="nav-item-label">Checklist</div></div>
+    <div class="nav-item"        id="nav-help"      onclick="switchTab('sec-help')"><div class="nav-item-icon">⚙️</div><div class="nav-item-label">Settings</div></div>
   </nav>
 
 </div><!-- screen-app -->
@@ -1802,11 +1831,12 @@ function switchTab(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);if(el)el.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const map={'sec-home':'nav-home','sec-expenses':'nav-expenses','sec-stats':'nav-stats','sec-help':'nav-help'};
+  const map={'sec-home':'nav-home','sec-expenses':'nav-expenses','sec-stats':'nav-stats','sec-checklist':'nav-checklist','sec-help':'nav-help'};
   const nav=document.getElementById(map[id]);if(nav)nav.classList.add('active');
   window.scrollTo(0,0);
   if(id==='sec-expenses')renderExpListFull();
   if(id==='sec-stats')renderStats();
+  if(id==='sec-checklist')renderChecklist();
 }
 
 function backToTrips(){
@@ -1999,6 +2029,106 @@ function confirmSignOut(){
     msg:'Your display name will be cleared. All trips and data on this device are kept safe — sign back in (with any name) to access them.',
     okLabel:'Sign Out',okClass:'danger',
     onOk:()=>{lsDel('current-user');location.reload();}
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   TRIP CHECKLIST
+───────────────────────────────────────────────────── */
+const TRIP_CHECKLIST=[
+  {id:'toiletries',label:'Toiletries & Health',color:'#c0392b',
+   items:['Toothbrush + toothpaste','Shampoo / conditioner','Soap / body wash','Deodorant','Sunscreen','Insect repellent','Moisturizer / lip balm','Hand sanitizer','Tissues / wet wipes','Razor / grooming kit','Contact lenses / glasses']},
+  {id:'medicine_adults',label:'💊 Adult Medicines',color:'#c0392b',
+   items:['Prescription medications (daily)','Pain reliever (Paracetamol / Ibuprofen)','Antacid / digestive tablets','Anti-diarrhea tablets','Anti-nausea / motion sickness tabs','Antihistamine (allergy)','Cold & flu tablets','Throat lozenges','Electrolyte sachets (ORS)','Vitamin supplements','Blood pressure meds (if applicable)','Diabetes meds / insulin (if applicable)','Antibiotic (doctor prescribed)','Eye drops','Nasal spray / decongestant']},
+  {id:'medicine_kids',label:'👶 Kids Medicines',color:'#e74c3c',
+   items:['Kids paracetamol / fever syrup','Kids cough syrup','Oral rehydration sachets (ORS)','Anti-allergy syrup / drops','Kids anti-diarrhea medicine','Gripe water / gas relief','Teething gel (for infants)','Kids multivitamin drops','Nasal saline drops','Thermometer','Kids band-aids + antiseptic cream','Mosquito repellent patch / roll-on for kids']},
+  {id:'first_aid',label:'🩹 First Aid Kit',color:'#922b21',
+   items:['Adhesive bandages (assorted)','Sterile gauze pads','Medical tape','Antiseptic solution / Betadine','Alcohol wipes','Scissors + tweezers','Disposable gloves','Burn relief gel','Ice pack (instant cold pack)','Cotton balls / swabs','Digital thermometer','Emergency contact card']},
+  {id:'travel',label:'Travel Essentials',color:'#b07d12',
+   items:['Day bag / backpack','Luggage locks','Luggage tags','Packing cubes','Travel wallet / pouch','Maps / guidebook','Money belt / anti-theft bag','Quick-dry travel towel']},
+  {id:'home',label:'Before You Leave Home',color:'#1a2640',
+   items:['Lock all doors & windows','Unplug appliances','Set lights on timer','Take out trash','Stop mail / newspaper','Arrange pet / plant care','Share itinerary with someone','Check passport expiry','Download offline maps','Notify bank of travel','Set up eSIM / data plan']},
+  {id:'comfort',label:'Comfort & Misc',color:'#2d6a3f',
+   items:['Neck pillow','Eye mask / earplugs','Reusable water bottle','Snacks for travel','Laundry bag','Zip-lock bags','Collapsible water bottle']},
+  {id:'documents',label:'Documents & Money',color:'#2c3e7a',
+   items:['Passport / ID','Visa (if needed)','Flight / train tickets','Hotel confirmation','Travel insurance docs','Credit / debit cards','Local currency / cash','Copies of documents',"Driver's license"]},
+  {id:'electronics',label:'Electronics & Gadgets',color:'#1a2640',
+   items:['Phone + charger','Power bank','Universal adapter','Camera + memory card','Headphones / earbuds','Laptop / tablet','E-reader / books','eSIM card / pocket Wi-Fi']},
+  {id:'clothing',label:'Clothing',color:'#1a6b5e',
+   items:['Underwear','Socks','T-shirts / tops','Pants / shorts','Light jacket / hoodie','Sleepwear','Swimsuit','Walking shoes','Sandals / flip-flops','Formal outfit (if needed)','Rain jacket / umbrella','Hat / cap','Sunglasses']},
+  {id:'kids_toys',label:'Kids Toys & Sports',color:'#8e44ad',
+   items:['Cricket bat','Cricket ball','Football','Pickleball paddle + ball','Badminton rackets + shuttlecock','Frisbee','Skipping rope','Playing cards','Ludo board + dice','Chess set','Small backpack for kids']},
+  {id:'snacks',label:'Snacks & Munchies',color:'#e67e22',
+   items:['Chips / crisps','Biscuits / cookies','Namkeen / mixture','Nuts & dry fruits','Chocolates / candy','Energy bars / granola bars','Instant noodles / cup soup','Juice boxes / tetra packs','Water bottles (extra)','Fruit (apples / bananas)','Chewing gum / mints','Instant oats / cereal']},
+];
+function _checklistKey(){const t=curTrip();return t?`trip:${t.id}:checklist`:null;}
+let _openCats=new Set(['toiletries']);
+function renderChecklist(){
+  const container=document.getElementById('checklist-container');
+  if(!container)return;
+  const t=curTrip();
+  if(!t){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.85rem">⚙️ Open a trip to see your checklist</div>';return;}
+  const k=_checklistKey();
+  const state=k?lsGet(k,{}):{};  
+  let total=0,done=0;
+  TRIP_CHECKLIST.forEach(c=>{c.items.forEach((_,i)=>{total++;if(state[`${c.id}_${i}`])done++;});});
+  const pct=total?Math.round(done/total*100):0;
+  let html=`<div class="checklist-progress-wrap">
+    <div class="checklist-progress-info"><span>${done} of ${total} packed</span><span>${pct}%</span></div>
+    <div class="checklist-progress"><div id="checklist-bar" class="checklist-progress-bar" style="width:${pct}%"></div></div>
+  </div>`;
+  TRIP_CHECKLIST.forEach(cat=>{
+    const catDone=cat.items.filter((_,i)=>state[`${cat.id}_${i}`]).length;
+    const isOpen=_openCats.has(cat.id);
+    html+=`<div class="checklist-cat${isOpen?' open':''}" data-cat="${cat.id}">
+      <div class="checklist-cat-header" style="background:${cat.color}" onclick="toggleChecklistCat('${cat.id}')">
+        <span>${cat.label}</span>
+        <div class="checklist-cat-header-right">
+          <span class="checklist-cat-count">${catDone}/${cat.items.length}</span>
+          <span class="checklist-cat-chevron">▾</span>
+        </div>
+      </div>
+      <div class="checklist-cat-body">`;
+    cat.items.forEach((item,i)=>{
+      const chk=state[`${cat.id}_${i}`]?'checked':'';
+      html+=`<label class="checklist-row"><input type="checkbox" ${chk} onchange="toggleChecklistItem('${cat.id}',${i},this.checked)"/><span>${item}</span></label>`;
+    });
+    html+=`</div></div>`;
+  });
+  container.innerHTML=html;
+}
+function toggleChecklistCat(catId){
+  if(_openCats.has(catId))_openCats.delete(catId);
+  else _openCats.add(catId);
+  const el=document.querySelector(`.checklist-cat[data-cat="${catId}"]`);
+  if(el)el.classList.toggle('open',_openCats.has(catId));
+}
+function toggleChecklistItem(catId,idx,checked){
+  const k=_checklistKey();if(!k)return;
+  const state=lsGet(k,{});
+  state[`${catId}_${idx}`]=checked;
+  lsSet(k,state);
+  let total=0,done=0;
+  TRIP_CHECKLIST.forEach(c=>{c.items.forEach((_,i)=>{total++;if(state[`${c.id}_${i}`])done++;});});
+  const pct=total?Math.round(done/total*100):0;
+  const bar=document.getElementById('checklist-bar');if(bar)bar.style.width=pct+'%';
+  const pi=document.querySelector('.checklist-progress-info');
+  if(pi){pi.children[0].textContent=`${done} of ${total} packed`;pi.children[1].textContent=`${pct}%`;}
+  // Update category count badge
+  const cat=TRIP_CHECKLIST.find(c=>c.id===catId);
+  if(cat){
+    const catDone=cat.items.filter((_,i)=>state[`${catId}_${i}`]).length;
+    const badge=document.querySelector(`.checklist-cat[data-cat="${catId}"] .checklist-cat-count`);
+    if(badge)badge.textContent=`${catDone}/${cat.items.length}`;
+  }
+}
+function resetChecklist(){
+  const k=_checklistKey();
+  if(!k){showToast('⚠️ Open a trip first');return;}
+  showConfirm({icon:'🔄',title:'Reset Checklist?',
+    msg:'All items will be unchecked. This cannot be undone.',
+    okLabel:'Reset',okClass:'danger',
+    onOk:()=>{lsDel(k);renderChecklist();showToast('✅ Checklist reset');}
   });
 }
 
