@@ -448,6 +448,29 @@ select.form-input{cursor:pointer}
 @media(max-width:480px){.app-shell{max-width:100%}.bottom-nav{left:0;transform:none;width:100%}}
 </style>
 </head>
+<!-- Capture PWA install prompt as early as possible, before any other script -->
+<script>
+window._pwaPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  window._pwaPrompt=e;
+  // Show banner once DOM is available
+  function tryShow(){
+    var dismissed=localStorage.getItem('tripshare:install-dismissed');
+    if(dismissed)return;
+    var b=document.getElementById('install-banner');
+    if(b)b.style.display='flex';
+  }
+  if(document.body)tryShow();
+  else document.addEventListener('DOMContentLoaded',tryShow);
+});
+window.addEventListener('appinstalled',function(){
+  window._pwaPrompt=null;
+  var b=document.getElementById('install-banner');
+  if(b)b.style.display='none';
+  localStorage.setItem('tripshare:install-dismissed','1');
+});
+</script>
 <body>
 
 <!-- ═══════════════════════════════════════════════════
@@ -1056,7 +1079,7 @@ select.form-input{cursor:pointer}
       <div class="account-menu-item-icon">✏️</div>
       <div class="account-menu-item-label">Edit Display Name</div>
     </div>
-    <div class="account-menu-item" id="account-install-item" onclick="closeModal('modal-account');installPWA()" style="display:none">
+    <div class="account-menu-item" id="account-install-item" onclick="closeModal('modal-account');installPWA()">
       <div class="account-menu-item-icon">📲</div>
       <div class="account-menu-item-label">Install App</div>
     </div>
@@ -1834,11 +1857,17 @@ async function continueAsGuest(){
   const ni=document.getElementById('auth-name');
   const name=(ni.value||'').trim();
   if(!name){showToast('\u26a0\ufe0f Please enter your name');ni.focus();return;}
-  const uid=genId();const ci=Math.floor(Math.random()*MEMBER_COLORS.length);
-  S.user={id:uid,name,color:MEMBER_COLORS[ci]};
+  // Reuse persistent device ID — never generate a new one on login
+  // This ensures all trips are recoverable after sign-out
+  let deviceId=lsGet('device-id',null);
+  if(!deviceId){deviceId=genId();lsSet('device-id',deviceId);}
+  // Keep existing avatar color if this device had one
+  const existing=lsGet('current-user',null);
+  const color=existing?.color||MEMBER_COLORS[Math.floor(Math.random()*MEMBER_COLORS.length)];
+  S.user={id:deviceId,name,color};
   lsSet('current-user',S.user);
   // Show trips screen INSTANTLY with local data — don't wait for Firebase
-  S.trips=lsGet(`u:${uid}:trips-data`,[]);
+  S.trips=lsGet(`u:${deviceId}:trips-data`,[]);
   showScreen('screen-trips');renderTripsScreen();
   // Apply any pending join code
   const pc=sessionStorage.getItem('pendingJoin');
@@ -1960,7 +1989,7 @@ async function saveUserName(){
 function confirmSignOut(){
   showConfirm({
     icon:'🚪',title:'Sign Out?',
-    msg:'You will need to enter your name again. Your trips data stays on this device.',
+    msg:'Your display name will be cleared. All trips and data on this device are kept safe — sign back in (with any name) to access them.',
     okLabel:'Sign Out',okClass:'danger',
     onOk:()=>{lsDel('current-user');location.reload();}
   });
@@ -2438,40 +2467,40 @@ window.addEventListener('offline',()=>{
 /* ─────────────────────────────────────────────────────
    PWA INSTALL
 ───────────────────────────────────────────────────── */
-let _installPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  _installPrompt=e;
-  showInstallBanner();
-});
-window.addEventListener('appinstalled',()=>{
-  _installPrompt=null;
-  hideInstallBanner();
-  showToast('✅ TripShare installed!');
-});
 function showInstallBanner(){
+  if(localStorage.getItem('tripshare:install-dismissed'))return;
   const b=document.getElementById('install-banner');
   if(b)b.style.display='flex';
-  const m=document.getElementById('account-install-item');
-  if(m)m.style.display='flex';
 }
 function hideInstallBanner(){
   const b=document.getElementById('install-banner');
   if(b)b.style.display='none';
+  localStorage.setItem('tripshare:install-dismissed','1');
 }
 function installPWA(){
-  if(!_installPrompt){
-    showToast('ℹ️ Open in Chrome and use browser menu → Add to Home Screen');
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(isStandalone){showToast('\u2705 TripShare is already installed!');return;}
+  if(window._pwaPrompt){
+    window._pwaPrompt.prompt();
+    window._pwaPrompt.userChoice.then(r=>{
+      if(r.outcome==='accepted'){hideInstallBanner();showToast('\u2705 Installing TripShare\u2026');}
+      window._pwaPrompt=null;
+    });
     return;
   }
-  _installPrompt.prompt();
-  _installPrompt.userChoice.then(r=>{
-    if(r.outcome==='accepted'){showToast('✅ Installing TripShare…');}
-    _installPrompt=null;
-    hideInstallBanner();
-    const m=document.getElementById('account-install-item');
-    if(m)m.style.display='none';
-  });
+  // No native prompt — show manual instructions based on platform
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  const isAndroid=/Android/.test(navigator.userAgent);
+  let guide;
+  if(isIOS){
+    guide='On iPhone/iPad (Safari):\n\n1. Tap the \u238b Share button at the bottom\n2. Scroll and tap \'Add to Home Screen\'\n3. Tap \'Add\'';
+  }else if(isAndroid){
+    guide='On Android Chrome:\n\n1. Tap the \u22ee menu (top-right)\n2. Tap \'Add to Home screen\'\n3. Tap \'Add\'';
+  }else{
+    guide='On Chrome desktop:\n\n1. Click the \u229e install icon in the address bar\nOR\n2. Click \u22ee menu \u2192 \'Install TripShare\'';
+  }
+  showConfirm({icon:'\ud83d\udcf2',title:'Install TripShare',msg:guide,okLabel:'Got it',okClass:'primary',onOk:()=>{}});
+}
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2493,6 +2522,12 @@ function init(){
   document.documentElement.setAttribute('data-theme',theme);
   const curr=lsGet('currency','INR');
   if(CURRENCIES[curr]){S.currency=CURRENCIES[curr];S.currencyCode=curr;}
+  // Hide install option if already running as installed PWA
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(isStandalone){
+    const b=document.getElementById('install-banner');if(b)b.style.display='none';
+    const m=document.getElementById('account-install-item');if(m)m.style.display='none';
+  }
 
   const dark=theme==='dark';
   document.querySelectorAll('#theme-btn').forEach(el=>el.textContent=dark?'🌙':'☀️');
