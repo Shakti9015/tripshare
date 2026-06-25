@@ -6,7 +6,7 @@
 <title>TripShare — Split Smarter, Travel Together</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#7c6aff" />
-<link rel="apple-touch-icon" href="icons/icon.svg" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
@@ -749,6 +749,13 @@ window.addEventListener('appinstalled',function(){
             <div><div class="setting-label">Real-time Sync</div><div class="setting-desc" id="firebase-setting-desc">Configure Firebase for multi-user sharing</div></div>
           </div>
           <div class="setting-value" id="firebase-setting-val" style="color:var(--accent3)">Setup</div>
+        </div>
+        <div class="setting-item" id="settings-install-row" onclick="installPWA()">
+          <div class="setting-left">
+            <div class="setting-icon">📲</div>
+            <div><div class="setting-label" id="settings-install-label">Install App</div><div class="setting-desc">Add to home screen for quick access</div></div>
+          </div>
+          <div class="setting-arrow" id="settings-install-arrow">›</div>
         </div>
         <div class="setting-item" onclick="openShareTrip()">
           <div class="setting-left">
@@ -2526,6 +2533,8 @@ function init(){
   if(isStandalone){
     const b=document.getElementById('install-banner');if(b)b.style.display='none';
     const m=document.getElementById('account-install-item');if(m)m.style.display='none';
+    const sl=document.getElementById('settings-install-label');if(sl)sl.textContent='App Installed ✅';
+    const sa=document.getElementById('settings-install-arrow');if(sa)sa.textContent='';
   }
 
   const dark=theme==='dark';
