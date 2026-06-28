@@ -315,6 +315,7 @@ input,select,textarea{font-family:inherit}
 .expense-name{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .expense-meta{font-size:.7rem;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .pay-method-badge{font-size:.6rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-weight:600}
+.added-by-badge{font-size:.6rem;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-style:italic;white-space:nowrap}
 .expense-amount{text-align:right;flex-shrink:0}
 .expense-amount-val{font-size:.93rem;font-weight:800}
 .expense-amount-who{font-size:.67rem;color:var(--text2);margin-top:2px}
@@ -654,7 +655,12 @@ window.addEventListener('appinstalled',function(){
       </div>
 
       <div class="card">
-        <div class="card-title">Members <span class="card-title-action" onclick="openAddMember()">+ Add</span></div>
+        <div class="card-title">Members
+          <span style="display:flex;gap:10px;align-items:center">
+            <span id="btn-merge-members" class="card-title-action" onclick="openMergeMembers()" style="display:none;color:var(--accent3)">⊕ Merge</span>
+            <span class="card-title-action" onclick="openAddMember()">+ Add</span>
+          </span>
+        </div>
         <div class="member-chips" id="member-chips">
           <div class="add-member-chip" onclick="openAddMember()">+ Add Member</div>
         </div>
@@ -742,6 +748,15 @@ window.addEventListener('appinstalled',function(){
         <div id="full-settlements"><div class="empty-state" style="padding:20px"><div>🎉</div><p>All settled up!</p></div></div>
       </div>
 
+      <div class="card">
+        <div class="card-title">Export Trip Data 📤</div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn-submit" onclick="exportCSV()" style="flex:1;padding:12px;font-size:.88rem">📊 CSV / Excel</button>
+          <button class="btn-submit" onclick="exportPDF()" style="flex:1;padding:12px;font-size:.88rem;background:linear-gradient(135deg,#35d07a,#4facfe)">🖨️ PDF / Print</button>
+        </div>
+        <p style="font-size:.72rem;color:var(--text2);margin-top:10px;line-height:1.6">CSV opens in Excel or Google Sheets · PDF uses your browser's print dialog — choose <em>Save as PDF</em></p>
+      </div>
+
     </div><!-- sec-stats -->
 
     <!-- ══ SETTINGS / HELP ══ -->
@@ -784,6 +799,13 @@ window.addEventListener('appinstalled',function(){
           </div>
           <div class="setting-arrow">›</div>
         </div>
+        <div class="setting-item" onclick="openExportModal()">
+          <div class="setting-left">
+            <div class="setting-icon">📤</div>
+            <div><div class="setting-label">Export Trip</div><div class="setting-desc">Download as CSV (Excel) or PDF</div></div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
         <div class="setting-item" onclick="confirmEndTrip()">
           <div class="setting-left">
             <div class="setting-icon">⏹</div>
@@ -795,10 +817,11 @@ window.addEventListener('appinstalled',function(){
 
       <div class="card">
         <div class="card-title">How to Use TripShare</div>
-        <div class="help-item"><div class="help-icon">➕</div><div class="help-text"><h4>Adding an Expense</h4><p>Tap <strong>+</strong> to add an expense. Select category, enter amount, choose who paid, pick payment method (Cash / UPI / Credit / Debit / Net Banking), and how to split.</p></div></div>
-        <div class="help-item"><div class="help-icon">🔗</div><div class="help-text"><h4>Sharing Your Trip</h4><p>Tap <strong>Share</strong> on the top bar to get the invite code. Your trip-mates enter this code to join — all expenses sync in real-time when Firebase is configured.</p></div></div>
-        <div class="help-item"><div class="help-icon">👥</div><div class="help-text"><h4>Managing Members</h4><p>Add all people on the trip. Each gets a colour-coded avatar. Members are used to track who paid and who owes.</p></div></div>
+        <div class="help-item"><div class="help-icon">➕</div><div class="help-text"><h4>Adding an Expense</h4><p>Tap <strong>+</strong> to add an expense. Select category, enter amount, choose who paid, pick payment method (Cash / UPI / Credit / Debit / Net Banking), and how to split. A <em>✍️ Added by</em> badge appears on each expense when someone adds it on behalf of the payer.</p></div></div>
+        <div class="help-item"><div class="help-icon">🔗</div><div class="help-text"><h4>Sharing Your Trip</h4><p>Tap <strong>Share</strong> on the top bar to get the invite code. Trip-mates enter this code to join. If your name already exists on the trip, the app automatically links your device to that profile — no duplicate members created.</p></div></div>
+        <div class="help-item"><div class="help-icon">👥</div><div class="help-text"><h4>Managing Members</h4><p>Add all people on the trip. Each gets a colour-coded avatar. As trip admin, tap <strong>⊕ Merge</strong> next to Members to combine two profiles (e.g. "Abhishek" and "Abhishek Singh") into one — all expenses are reassigned automatically.</p></div></div>
         <div class="help-item"><div class="help-icon">💸</div><div class="help-text"><h4>Settle Up</h4><p>The app calculates the minimum number of payments needed. See <strong>Settle Up</strong> on the dashboard or the full plan in Stats.</p></div></div>
+        <div class="help-item"><div class="help-icon">📤</div><div class="help-text"><h4>Export Trip</h4><p>In Stats, tap <strong>Export CSV</strong> to download a spreadsheet of all expenses (opens in Excel / Google Sheets), or <strong>Export PDF</strong> to print or share a formatted trip summary with the full settlement plan.</p></div></div>
         <div class="help-item"><div class="help-icon">📶</div><div class="help-text"><h4>Offline Mode</h4><p>Add expenses without internet. They sync automatically once you reconnect — nothing is lost.</p></div></div>
         <div class="help-item"><div class="help-icon">⬅️</div><div class="help-text"><h4>Swipe to Delete</h4><p>Swipe left on any expense item to reveal the delete action.</p></div></div>
         <div class="help-item"><div class="help-icon">🔐</div><div class="help-text"><h4>Biometric Lock</h4><p>The app uses your device's biometric / screen lock to protect access each time you open it.</p></div></div>
@@ -1138,6 +1161,37 @@ window.addEventListener('appinstalled',function(){
   </div>
 </div>
 
+<!-- MERGE MEMBERS MODAL -->
+<div class="modal-overlay" id="modal-merge" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔗 Merge Duplicate Members</div>
+    <div class="modal-subtitle">Select two members. Tap once to mark as <strong style="color:var(--accent2)">✅ KEEP</strong>, tap a second member to mark as <strong style="color:var(--accent)">🗑 REMOVE</strong>. All expenses will be reassigned to the kept member.</div>
+    <div id="merge-member-list" style="display:flex;flex-direction:column;gap:8px;margin:14px 0;max-height:280px;overflow-y:auto"></div>
+    <div id="merge-preview" style="display:none;background:var(--surface2);border:1.5px solid var(--primary);border-radius:13px;padding:13px 14px;font-size:.83rem;margin-bottom:12px;line-height:1.8"></div>
+    <button class="btn-submit" id="merge-confirm-btn" onclick="confirmMergeMembers()" disabled style="opacity:.5">Merge Members</button>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-merge')" style="margin-top:8px">Cancel</button>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="modal-export" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📤 Export Trip Data</div>
+    <div class="modal-subtitle" id="export-trip-name">Trip</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:12px 0 4px">
+      <button class="btn-submit" onclick="exportCSV()">📊 Download as CSV (Excel / Google Sheets)</button>
+      <button class="btn-submit" style="background:linear-gradient(135deg,#35d07a,#4facfe)" onclick="exportPDF()">🖨️ Print / Save as PDF</button>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.78rem;color:var(--text2);line-height:1.7;margin-top:6px">
+      <strong style="color:var(--text)">CSV:</strong> All expenses + settlement plan in a spreadsheet. Opens in Excel or Google Sheets.<br/>
+      <strong style="color:var(--text)">PDF:</strong> Opens print dialog — select <em>Save as PDF</em> in your browser.
+    </div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-export')" style="margin-top:10px">Close</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1287,10 +1341,29 @@ function fmtDate(d){
 function memberColor(i){return MEMBER_COLORS[i%MEMBER_COLORS.length]}
 function memberInitials(n){return(n||'?').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()}
 function getMember(id){return S.members.find(m=>m.id===id)}
+function getMemberByUserId(uid){return S.members.find(m=>m.userId===uid)}
+// Merge map helpers — resolve stale member IDs left behind by a merge operation
+function getMergeMap(){return S.currentTripId?lsGet(`trip:${S.currentTripId}:mergeMap`,{}):{};}
+function resolveMemberId(id){
+  const map=getMergeMap();let r=id;const seen=new Set();
+  while(map[r]&&!seen.has(r)){seen.add(r);r=map[r];}return r;
+}
 function myMember(){return S.members.find(m=>m.userId===S.user.id)}
 function isCurrentUserAdmin(){
   const trip=curTrip();if(!trip)return false;
-  return S.user.id===(trip.adminId||trip.createdBy);
+  const adminId=trip.adminId||trip.createdBy;
+  // Primary: direct device ID match
+  if(S.user.id===adminId)return true;
+  // Fallback for cross-device: the user joined from a different device and claimed their member,
+  // which updated member.userId but NOT trip.adminId. Resolve by finding the admin's member entity.
+  const myMem=S.members.find(m=>m.userId===S.user.id);
+  if(!myMem)return false;
+  const adminMem=S.members.find(m=>m.userId===adminId);
+  if(adminMem)return adminMem.id===myMem.id;
+  // Admin's original device ID is no longer in any member (was re-claimed from a new device).
+  // Heuristic: the trip creator is the first member added (lowest createdAt).
+  const sorted=[...S.members].sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  return sorted.length>0&&sorted[0].userId===S.user.id;
 }
 function getTrip(id){return S.trips.find(t=>t.id===id)}
 function curTrip(){return getTrip(S.currentTripId)}
@@ -1361,13 +1434,39 @@ async function joinTrip(code){
   if(!trip)trip=lsGet(`trip:${tripId}:meta`,null);
   if(!trip)return{success:false,error:'Trip data not found. Make sure you are online and the organizer has set up Firebase.'};
 
-  await addMemberToTrip(tripId,{name:S.user.name,color:S.user.color,userId:S.user.id});
+  // Load existing members to detect duplicates / re-claim own member from another device
+  let existingMembers=[];
+  if(FIREBASE_ENABLED&&db){
+    try{const snap=await db.collection('trips').doc(tripId).collection('members').get();existingMembers=snap.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
+  }
+  if(!existingMembers.length)existingMembers=lsGet(`trip:${tripId}:members`,[]);
+
+  const alreadyLinked=existingMembers.find(m=>m.userId===S.user.id);
+  if(!alreadyLinked){
+    // Find a member with the same name — could be this user on another device
+    const sameName=existingMembers.find(m=>m.name.toLowerCase()===S.user.name.toLowerCase());
+    if(sameName){
+      // If this member was the trip admin, transfer adminId to the current device so future admin checks work
+      const wasAdmin=sameName.userId&&sameName.userId===(trip.adminId||trip.createdBy);
+      if(FIREBASE_ENABLED&&db){try{await db.collection('trips').doc(tripId).collection('members').doc(sameName.id).update({userId:S.user.id});}catch(e){}}
+      const arr=existingMembers.map(m=>m.id===sameName.id?{...m,userId:S.user.id}:m);
+      lsSet(`trip:${tripId}:members`,arr);
+      if(wasAdmin){
+        trip.adminId=S.user.id;
+        lsSet(`trip:${tripId}:meta`,trip);
+        if(FIREBASE_ENABLED&&db){try{await db.collection('trips').doc(tripId).update({adminId:S.user.id});}catch(e){}}
+      }
+    }else{
+      await addMemberToTrip(tripId,{name:S.user.name,color:S.user.color,userId:S.user.id});
+    }
+  }
   S.trips.unshift(trip);
   const uid=S.user.id;
   const ids=lsGet(`u:${uid}:trips`,[]);
   if(!ids.includes(tripId))ids.unshift(tripId);
   lsSet(`u:${uid}:trips`,ids);
   lsSet(`u:${uid}:trips-data`,S.trips);
+  lsSet(`trip:${tripId}:meta`,trip);
   return{success:true,tripId};
 }
 
@@ -1508,8 +1607,13 @@ function subscribeTrip(tripId){
     },()=>setSyncStatus('offline'));
   unsubMem=db.collection('trips').doc(tripId).collection('members')
     .onSnapshot(snap=>{
+      const prevMembers=S.members.slice();
       S.members=snap.docs.map(d=>({id:d.id,...d.data()}));
       lsSet(`trip:${tripId}:members`,S.members);renderMemberChips();populatePayerChips();
+      // Warn user if their member was absorbed by a merge while they had the app open
+      if(prevMembers.some(m=>m.userId===S.user.id)&&!S.members.some(m=>m.userId===S.user.id)){
+        showToast('⚠️ Your profile was merged by the admin. Please reload to continue.');
+      }
     });
 }
 
@@ -1544,13 +1648,16 @@ function calcBalances(){
   for(const e of S.expenses){
     if(!e.amount||!e.paidBy)continue;
     const amt=parseFloat(e.amount);
-    if(bal.hasOwnProperty(e.paidBy))bal[e.paidBy]+=amt;
-    const split=e.splitBetween&&e.splitBetween.length>0?e.splitBetween:S.members.map(m=>m.id);
+    // Resolve stale paidBy through merge map (handles expenses added from stale browser sessions)
+    const paidById=resolveMemberId(e.paidBy);
+    if(bal.hasOwnProperty(paidById))bal[paidById]+=amt;
+    const rawSplit=e.splitBetween&&e.splitBetween.length>0?e.splitBetween:S.members.map(m=>m.id);
     if(e.splitType==='payer'){
-      bal[e.paidBy]-=amt;
+      if(bal.hasOwnProperty(paidById))bal[paidById]-=amt;
     }else{
-      const share=amt/split.length;
-      split.forEach(id=>{if(bal.hasOwnProperty(id))bal[id]-=share;});
+      // Resolve and deduplicate split IDs — stale IDs map to their absorbed member
+      const split=[...new Set(rawSplit.map(id=>resolveMemberId(id)).filter(id=>bal.hasOwnProperty(id)))];
+      if(split.length){const share=amt/split.length;split.forEach(id=>{bal[id]-=share;});}
     }
   }
   return bal;
@@ -1672,23 +1779,29 @@ function renderMemberChips(){
       ${actionBtn}
     </div>`;
   }).join('')+`<div class="add-member-chip" onclick="openAddMember()">+ Add</div>`;
+  // Show Merge button only for admin with 2+ members
+  const mergeBtn=document.getElementById('btn-merge-members');
+  if(mergeBtn)mergeBtn.style.display=(amAdmin&&S.members.length>=2)?'inline':'none';
 }
 
 function renderExpList(containerId,items){
   const el=document.getElementById(containerId);if(!el)return;
   if(!items.length){el.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:30px">🧾</div><p>No expenses yet</p></div>';return;}
   el.innerHTML=items.map(e=>{
-    const payer=getMember(e.paidBy);
-    const payerName=payer?payer.name:(e.paidBy||'Unknown');
+    const payer=getMember(e.paidBy)||getMember(resolveMemberId(e.paidBy));
+    const payerName=payer?payer.name:'Unknown';
     const cc=CAT_COLORS[e.category]||CAT_COLORS['other'];
     const pm=PAY_LABELS[e.paymentMethod]||'';
+    const addedByMember=e.createdBy?getMemberByUserId(e.createdBy):null;
+    // Show "Added by" whenever we know who added it; if same as payer, label as "by you" context
+    const addedByDiffFromPayer=addedByMember&&addedByMember.id!==e.paidBy;
     return`<div class="expense-item" id="exp-${e.id}" data-id="${e.id}"
                ontouchstart="tsStart(event,'${e.id}')" ontouchend="tsEnd(event,'${e.id}')"
                onclick="openEditExpense('${e.id}')">
       <div class="expense-icon" style="background:${cc}">${e.icon||'📝'}</div>
       <div class="expense-details">
         <div class="expense-name">${e.title||'Expense'}</div>
-        <div class="expense-meta">${fmtDate(e.date)} · ${payerName}${pm?` <span class="pay-method-badge">${pm}</span>`:''}</div>
+        <div class="expense-meta">${fmtDate(e.date)} · ${payerName}${pm?` <span class="pay-method-badge">${pm}</span>`:''}${addedByMember?` <span class="added-by-badge">${addedByDiffFromPayer?'✍️ '+addedByMember.name:'✍️ self'}</span>`:''}</div>
       </div>
       <div class="expense-amount">
         <div class="expense-amount-val">${fmt(e.amount)}</div>
@@ -2216,12 +2329,17 @@ async function submitExpense(){
   if(!amount||amount<=0){showToast('⚠️ Enter a valid amount');return;}
   const payerEl=document.querySelector('#payer-chips .payer-chip.active');
   if(!payerEl){showToast('⚠️ Select who paid');return;}
-  const paidBy=payerEl.dataset.id;
+  // Resolve in case this member was merged while the modal was open
+  const paidBy=resolveMemberId(payerEl.dataset.id);
+  if(!getMember(paidBy)){showToast('⚠️ Payer no longer exists (merged). Please close and reopen the form.');return;}
   let splitBetween=S.members.map(m=>m.id);
   if(selSplit==='select'){
     splitBetween=Array.from(document.querySelectorAll('#split-member-chips .payer-chip.active')).map(c=>c.dataset.id);
     if(!splitBetween.length){showToast('⚠️ Select at least one member');return;}
   }else if(selSplit==='payer'){splitBetween=[paidBy];}
+  // Resolve any merged member IDs in the split list and deduplicate
+  splitBetween=[...new Set(splitBetween.map(id=>resolveMemberId(id)).filter(id=>getMember(id)))];
+  if(!splitBetween.length){showToast('⚠️ No valid split members. Please reload and retry.');return;}
   const expData={
     title:title||(selCat.cat.charAt(0).toUpperCase()+selCat.cat.slice(1)),
     amount,category:selCat.cat,icon:selCat.icon,
@@ -2637,6 +2755,188 @@ function installPWA(){
     guide='On Chrome desktop:\n\n1. Click the \u229e install icon in the address bar\nOR\n2. Click \u22ee menu \u2192 \'Install TripShare\'';
   }
   showConfirm({icon:'\ud83d\udcf2',title:'Install TripShare',msg:guide,okLabel:'Got it',okClass:'primary',onOk:()=>{}});
+}
+
+/* ─────────────────────────────────────────────────────
+   MERGE MEMBERS
+───────────────────────────────────────────────────── */
+let _mergeSelection=[];
+
+function openMergeMembers(){
+  if(!isCurrentUserAdmin()){showToast('⚠️ Only the trip admin can merge members');return;}
+  if(S.members.length<2){showToast('⚠️ Need at least 2 members');return;}
+  _mergeSelection=[];
+  _renderMergeList();
+  const prev=document.getElementById('merge-preview');if(prev)prev.style.display='none';
+  const btn=document.getElementById('merge-confirm-btn');if(btn){btn.disabled=true;btn.style.opacity='.5';}
+  openModal('modal-merge');
+}
+
+function _renderMergeList(){
+  const list=document.getElementById('merge-member-list');if(!list)return;
+  list.innerHTML=S.members.map((m,i)=>{
+    const sel=_mergeSelection.indexOf(m.id);
+    const c=m.color||memberColor(i);
+    const badge=sel===0
+      ?`<span style="color:var(--accent2);font-size:.7rem;font-weight:800;padding:2px 9px;background:rgba(53,208,122,.15);border-radius:20px">✅ KEEP</span>`
+      :sel===1
+      ?`<span style="color:var(--accent);font-size:.7rem;font-weight:800;padding:2px 9px;background:rgba(255,106,138,.15);border-radius:20px">🗑 REMOVE</span>`
+      :`<span></span>`;
+    return`<div class="transfer-member-item${sel>=0?' selected':''}" onclick="toggleMergeSelect('${m.id}')" style="justify-content:flex-start;gap:10px">
+      <div class="member-avatar" style="background:${c};flex-shrink:0">${memberInitials(m.name)}</div>
+      <span style="flex:1;font-weight:600">${m.name}</span>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+function toggleMergeSelect(memberId){
+  const idx=_mergeSelection.indexOf(memberId);
+  if(idx>=0){
+    _mergeSelection.splice(idx,1);
+  }else if(_mergeSelection.length<2){
+    _mergeSelection.push(memberId);
+  }else{
+    _mergeSelection[1]=memberId;
+  }
+  _renderMergeList();
+  const canMerge=_mergeSelection.length===2;
+  const btn=document.getElementById('merge-confirm-btn');
+  if(btn){btn.disabled=!canMerge;btn.style.opacity=canMerge?'1':'.5';}
+  const prev=document.getElementById('merge-preview');
+  if(!prev)return;
+  if(canMerge){
+    const keep=getMember(_mergeSelection[0]),rem=getMember(_mergeSelection[1]);
+    const cnt=S.expenses.filter(e=>e.paidBy===_mergeSelection[1]||(e.splitBetween&&e.splitBetween.includes(_mergeSelection[1]))).length;
+    prev.style.display='block';
+    prev.innerHTML=`<strong style="color:var(--accent2)">${keep.name}</strong> will absorb <strong style="color:var(--accent)">${rem.name}</strong>.<br/><span style="color:var(--text2)">${cnt} expense${cnt!==1?'s':''} will be reassigned to <strong>${keep.name}</strong>.</span><br/><span style="color:var(--accent);font-size:.78rem">${rem.name} will be permanently deleted.</span>`;
+  }else{
+    prev.style.display='none';
+  }
+}
+
+function confirmMergeMembers(){
+  if(_mergeSelection.length!==2)return;
+  const keepMember=getMember(_mergeSelection[0]),remMember=getMember(_mergeSelection[1]);
+  if(!keepMember||!remMember)return;
+  closeModal('modal-merge');
+  showConfirm({
+    icon:'🔗',title:'Confirm Merge?',
+    msg:`All expenses of "${remMember.name}" will move to "${keepMember.name}". "${remMember.name}" will be permanently deleted. This cannot be undone.`,
+    okLabel:'Merge',okClass:'primary',
+    onOk:()=>doMergeMembers(_mergeSelection[0],_mergeSelection[1]),
+  });
+}
+
+async function doMergeMembers(keepId,removeId){
+  const remMember=getMember(removeId);const remName=remMember?remMember.name:'member';
+  const keepMember=getMember(keepId);const keepName=keepMember?keepMember.name:'member';
+  const toUpdate=[];
+  S.expenses=S.expenses.map(e=>{
+    let up={...e};let changed=false;
+    if(e.paidBy===removeId){up.paidBy=keepId;changed=true;}
+    if(e.splitBetween&&e.splitBetween.includes(removeId)){
+      up.splitBetween=[...new Set(e.splitBetween.map(id=>id===removeId?keepId:id))];
+      changed=true;
+    }
+    if(changed)toUpdate.push(up);
+    return changed?up:e;
+  });
+  lsSet(`trip:${S.currentTripId}:expenses`,S.expenses);
+  S.members=S.members.filter(m=>m.id!==removeId);
+  lsSet(`trip:${S.currentTripId}:members`,S.members);
+  // Persist merge map so any stale expense IDs (from open browser tabs) are auto-resolved
+  const mergeMap=lsGet(`trip:${S.currentTripId}:mergeMap`,{});
+  mergeMap[removeId]=keepId;lsSet(`trip:${S.currentTripId}:mergeMap`,mergeMap);
+  if(FIREBASE_ENABLED&&db){
+    try{
+      for(const exp of toUpdate){
+        await db.collection('trips').doc(S.currentTripId).collection('expenses').doc(exp.id).set(exp);
+      }
+      await db.collection('trips').doc(S.currentTripId).collection('members').doc(removeId).delete();
+    }catch(e){}
+  }
+  _mergeSelection=[];
+  syncTripTotal(S.currentTripId);
+  renderAll();
+  showToast(`✅ Merged "${remName}" → "${keepName}"`);
+}
+
+/* ─────────────────────────────────────────────────────
+   EXPORT
+───────────────────────────────────────────────────── */
+function openExportModal(){
+  const trip=curTrip();
+  if(!trip){showToast('⚠️ No trip selected');return;}
+  document.getElementById('export-trip-name').textContent=trip.name;
+  openModal('modal-export');
+}
+
+function exportCSV(){
+  const trip=curTrip();if(!trip)return;
+  const sym=S.currency.symbol;
+  const rows=[
+    ['TripShare Export','','','','','','','',''],
+    ['Trip',''+trip.name,'','','','','','',''],
+    ['Description',trip.description||'','','','','','','',''],
+    ['Date',trip.startDate||'','','','','','','',''],
+    ['Members',S.members.map(m=>m.name).join(', '),'','','','','','',''],
+    ['','','','','','','','',''],
+    ['Date','Title','Category','Amount ('+sym+')','Paid By','Split Among','Payment Method','Note','Added By'],
+  ];
+  S.expenses.forEach(e=>{
+    const payer=getMember(e.paidBy);
+    const splitIds=e.splitType==='payer'?[e.paidBy]:(e.splitBetween&&e.splitBetween.length?e.splitBetween:S.members.map(m=>m.id));
+    const splitStr=splitIds.map(id=>getMember(id)?.name||id).join(' | ');
+    const addedBy=e.createdBy?getMemberByUserId(e.createdBy)?.name||'':'';
+    const method=(PAY_LABELS[e.paymentMethod]||e.paymentMethod||'').replace(/[^\w\s]/g,'').trim();
+    rows.push([e.date||'',e.title||'',e.category||'',parseFloat(e.amount||0).toFixed(2),payer?.name||'',splitStr,method,e.note||'',addedBy]);
+  });
+  const setts=calcSettlements();
+  if(setts.length){
+    rows.push(['','','','','','','','','']);
+    rows.push(['Settlement Plan','','','','','','','','']);
+    rows.push(['From','To','Amount ('+sym+')','','','','','','']);
+    setts.forEach(s=>{
+      const f=getMember(s.from),t=getMember(s.to);
+      if(f&&t)rows.push([f.name,t.name,s.amount.toFixed(2),'','','','','','']);
+    });
+  }
+  const bom='\uFEFF';
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='TripShare_'+trip.name.replace(/[^a-z0-9]/gi,'_')+'_'+(trip.startDate||new Date().toISOString().split('T')[0])+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  closeModal('modal-export');
+  showToast('📊 CSV downloaded!');
+}
+
+function exportPDF(){
+  const trip=curTrip();if(!trip)return;
+  const sym=S.currency.symbol;
+  const total=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const pp=S.members.length>0?total/S.members.length:0;
+  const expRows=S.expenses.map(e=>{
+    const payer=getMember(e.paidBy);
+    const splitIds=e.splitType==='payer'?[e.paidBy]:(e.splitBetween&&e.splitBetween.length?e.splitBetween:S.members.map(m=>m.id));
+    const splitStr=splitIds.map(id=>getMember(id)?.name||id).join(', ');
+    const addedBy=e.createdBy?getMemberByUserId(e.createdBy):null;
+    const showAdded=addedBy&&addedBy.id!==e.paidBy;
+    const method=(PAY_LABELS[e.paymentMethod]||e.paymentMethod||'').replace(/[^\w\s]/g,'').trim();
+    return`<tr><td>${e.date||''}</td><td><strong>${e.title||''}</strong>${e.note?'<br/><span style="font-size:11px;color:#888">'+e.note+'</span>':''}</td><td>${e.category||''}</td><td style="text-align:right;font-weight:700;color:#333">${sym}${parseFloat(e.amount||0).toFixed(2)}</td><td>${payer?.name||''}</td><td style="font-size:11px">${splitStr}</td><td style="font-size:11px">${method}</td><td style="font-size:11px;color:#888">${showAdded?'✍️ '+addedBy.name:''}</td></tr>`;
+  }).join('');
+  const setts=calcSettlements();
+  const settRows=setts.map(s=>{
+    const f=getMember(s.from),t=getMember(s.to);if(!f||!t)return'';
+    return`<tr><td>${f.name}</td><td style="text-align:center">→</td><td>${t.name}</td><td style="text-align:right;font-weight:700;color:#c00">${sym}${s.amount.toFixed(2)}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>TripShare — ${trip.name}</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#222;font-size:13px}h1{color:#7c6aff;margin-bottom:4px;font-size:22px}h2{margin:22px 0 8px;color:#444;font-size:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #7c6aff;padding-bottom:4px}.meta{color:#888;font-size:12px;margin-bottom:16px}.summary{display:flex;gap:20px;margin-bottom:20px}.stat{background:#f5f5fc;border-radius:8px;padding:12px 18px;text-align:center;min-width:100px}.stat-val{font-size:18px;font-weight:800;color:#7c6aff}.stat-lbl{font-size:11px;color:#888;margin-top:2px}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:12px}th{background:#7c6aff;color:#fff;padding:7px 9px;text-align:left;font-size:11px}td{padding:6px 9px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}.footer{margin-top:28px;font-size:11px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:12px}@media print{body{margin:15px}}</style></head><body><h1>✈️ ${trip.name}</h1><div class="meta">${trip.description||''}${trip.description?' · ':''}${trip.startDate||''}${trip.startDate?' · ':''}${S.members.length} members</div><div class="summary"><div class="stat"><div class="stat-val">${sym}${total.toFixed(2)}</div><div class="stat-lbl">Total Spent</div></div><div class="stat"><div class="stat-val">${sym}${pp.toFixed(2)}</div><div class="stat-lbl">Per Person</div></div><div class="stat"><div class="stat-val">${S.expenses.length}</div><div class="stat-lbl">Expenses</div></div></div><h2>Members</h2><p style="font-size:13px;margin:0 0 16px">${S.members.map(m=>m.name).join(' &nbsp;·&nbsp; ')}</p><h2>Expenses</h2><table><thead><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th><th>Paid By</th><th>Split Among</th><th>Method</th><th>Added By</th></tr></thead><tbody>${expRows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;border-top:2px solid #7c6aff">Total</td><td style="font-weight:800;color:#7c6aff;border-top:2px solid #7c6aff">${sym}${total.toFixed(2)}</td><td colspan="4" style="border-top:2px solid #7c6aff"></td></tr></tfoot></table><h2>Settlement Plan</h2>${settRows?`<table><thead><tr><th>From</th><th></th><th>To</th><th>Amount</th></tr></thead><tbody>${settRows}</tbody></table>`:'<p style="color:#35d07a;font-size:13px">🎉 All settled up — no payments needed!</p>'}<div class="footer">Generated by TripShare &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div></body></html>`;
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),500);}
+  else showToast('⚠️ Allow pop-ups for PDF export');
+  closeModal('modal-export');
 }
 
 /* ─────────────────────────────────────────────────────
