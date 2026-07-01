@@ -1568,8 +1568,8 @@ async function addExpense(tripId,data){
   if(FIREBASE_ENABLED&&db){
     try{
       await db.collection('trips').doc(tripId).collection('expenses').doc(exp.id).set(exp);
-      const trip=curTrip();
-      if(trip)await db.collection('trips').doc(tripId).update({totalExpenses:(trip.totalExpenses||0)+exp.amount});
+      const newTotal=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      await db.collection('trips').doc(tripId).update({totalExpenses:newTotal});
       setSyncStatus('synced');
     }catch(e){addToQueue('add',exp,tripId);setSyncStatus('offline');}
   }else if(!S.isOnline){addToQueue('add',exp,tripId);}
@@ -1581,7 +1581,11 @@ async function deleteExpense(tripId,id){
   lsSet(`trip:${tripId}:expenses`,S.expenses);
   syncTripTotal(tripId);renderAll();
   if(FIREBASE_ENABLED&&db){
-    try{await db.collection('trips').doc(tripId).collection('expenses').doc(id).delete();}
+    try{
+      await db.collection('trips').doc(tripId).collection('expenses').doc(id).delete();
+      const newTotal=S.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      await db.collection('trips').doc(tripId).update({totalExpenses:newTotal});
+    }
     catch(e){addToQueue('delete',{id},tripId);}
   }
 }
@@ -2038,6 +2042,7 @@ async function selectTrip(tripId){
   if(trip&&trip.currency&&CURRENCIES[trip.currency]){S.currency=CURRENCIES[trip.currency];S.currencyCode=trip.currency;}
   showScreen('screen-app');switchTab('sec-home');
   await loadMembers(tripId);await loadExpenses(tripId);
+  syncTripTotal(tripId);
   subscribeTrip(tripId);renderDashboard();renderStats();setSyncStatus('synced');
   if(trip)lsSet(`trip:${tripId}:meta`,trip);
 }
