@@ -1,6 +1,6 @@
 {
-  "name": "TripShare — Split Smarter, Travel Together",
-  "short_name": "TripShare",
+  "name": "SpendMate — Track Together, Spend Smarter",
+  "short_name": "SpendMate",
   "description": "Track and split trip expenses in real-time with family and friends.",
   "start_url": "./",
   "display": "standalone",

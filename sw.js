@@ -1,10 +1,10 @@
 /**
- * TripShare Service Worker
+ * SpendMate Service Worker
  * Provides offline capability and caching for the PWA.
  */
 'use strict';
 
-const CACHE_NAME = 'tripshare-v2';
+const CACHE_NAME = 'spendmate-v1';
 const OFFLINE_URL = '/';
 
 // Files to pre-cache (app shell)
@@ -103,11 +103,11 @@ self.addEventListener('push', event => {
   if (!event.data) return;
   const data = event.data.json();
   event.waitUntil(
-    self.registration.showNotification(data.title || 'TripShare', {
+    self.registration.showNotification(data.title || 'SpendMate', {
       body: data.body || 'New update on your trip',
       icon: './icons/icon-192.png',
       badge: './icons/icon-72.png',
-      tag: 'tripshare-notification',
+      tag: 'spendmate-notification',
       renotify: true,
     })
   );

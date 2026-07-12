@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>TripShare — Split Smarter, Travel Together</title>
+<title>SpendMate — Track Together, Spend Smarter</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#7c6aff" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -466,6 +466,39 @@ select.form-input{cursor:pointer}
 .checklist-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
 .checklist-row span{font-size:.83rem;color:var(--text);transition:color .2s}
 .checklist-row input[type=checkbox]:checked + span{color:var(--text3);text-decoration:line-through}
+
+/* ═══════════════════════════════════════════════════════
+   SPENDMATE — MODE CHOOSER (HOME)
+═══════════════════════════════════════════════════════ */
+#screen-mode{gap:0;padding:24px 20px 48px;justify-content:flex-start}
+.mode-theme-btn{position:absolute;top:20px;right:20px;z-index:5}
+.mode-brand{text-align:center;margin:44px 0 6px}
+.mode-brand .app-icon{width:88px;height:88px;border-radius:26px;background:linear-gradient(135deg,#7c6aff,#ff6a8a);display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 16px;box-shadow:0 0 50px rgba(124,106,255,.4);animation:float 3s ease-in-out infinite}
+.mode-brand h1{font-size:2rem;font-weight:900;background:linear-gradient(135deg,#fff 30%,#c8b8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+:root[data-theme="light"] .mode-brand h1{background:linear-gradient(135deg,#6557e8,#e8506f);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mode-brand p{color:var(--text2);margin-top:8px;font-size:.9rem}
+.mode-hello{color:var(--text2);font-size:.86rem;text-align:center;margin:22px 0 12px;font-weight:600}
+.mode-cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:420px;margin:0 auto}
+.mode-card{display:flex;align-items:center;gap:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:22px;padding:18px 20px;cursor:pointer;transition:all .25s;text-align:left;width:100%;font-family:inherit;color:var(--text)}
+.mode-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--card-shadow)}
+.mode-card-icon{width:58px;height:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
+.mode-card.trip .mode-card-icon{background:linear-gradient(135deg,#7c6aff,#a78bff)}
+.mode-card.daily .mode-card-icon{background:linear-gradient(135deg,#35d07a,#4facfe)}
+.mode-card-text{flex:1;min-width:0}
+.mode-card-title{font-size:1.05rem;font-weight:800;margin-bottom:3px}
+.mode-card-sub{font-size:.77rem;color:var(--text2);line-height:1.5}
+.mode-card-arrow{font-size:1.5rem;color:var(--text3);flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════════
+   DAILY EXPENSES (DAYBOOK)
+═══════════════════════════════════════════════════════ */
+#screen-daily .fab{bottom:26px}
+.daily-month-bar{display:flex;align-items:center;justify-content:space-between;margin:14px 16px 2px;gap:10px}
+.daily-month-label{font-size:1rem;font-weight:800;flex:1;text-align:center}
+.daily-hero{background:linear-gradient(135deg,#35d07a 0%,#4facfe 100%);box-shadow:0 8px 40px rgba(53,208,122,.3)}
+.daily-day-group{margin-bottom:4px}
+.daily-day-header{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:12px 0 4px;display:flex;justify-content:space-between;align-items:center}
+.daily-day-total{color:var(--text2);font-weight:700}
 @media(max-width:480px){.app-shell{max-width:100%}.bottom-nav{left:0;transform:none;width:100%}}
 </style>
 </head>
@@ -499,16 +532,16 @@ window.addEventListener('appinstalled',function(){
 ═══════════════════════════════════════════════════ -->
 <div id="screen-lock" class="full-screen gradient">
   <div class="lock-logo">
-    <div class="app-icon">✈️</div>
-    <h1>TripShare</h1>
-    <p>Split smarter, travel together</p>
+    <div class="app-icon">💸</div>
+    <h1>SpendMate</h1>
+    <p>Track together. Spend smarter.</p>
   </div>
   <div class="biometric-ring" id="biometric-ring" onclick="attemptBiometric()">
     <div class="biometric-inner" id="biometric-inner">🔐</div>
   </div>
   <p class="lock-hint" id="lock-hint">Tap to authenticate<br/>with biometric or device PIN</p>
   <button class="btn-lock-unlock" onclick="attemptBiometric()">Unlock App</button>
-  <p class="lock-version">TripShare v1.0 · Offline-Ready · Multi-User</p>
+  <p class="lock-version">SpendMate v1.0 · Offline-Ready · Multi-User</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════
@@ -518,7 +551,7 @@ window.addEventListener('appinstalled',function(){
   <div style="width:100%;max-width:420px;padding:0 20px">
     <div class="auth-header">
       <div class="icon">👋</div>
-      <h2>Welcome to TripShare</h2>
+      <h2>Welcome to SpendMate</h2>
       <p>Enter your name to get started.<br/>No account required — works offline too.</p>
     </div>
     <div class="auth-form">
@@ -533,6 +566,37 @@ window.addEventListener('appinstalled',function(){
 </div>
 
 <!-- ═══════════════════════════════════════════════════
+     SPENDMATE — MODE CHOOSER (HOME)
+═══════════════════════════════════════════════════ -->
+<div id="screen-mode" class="full-screen" style="display:none">
+  <button class="btn-icon mode-theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+  <div class="mode-brand">
+    <div class="app-icon">💸</div>
+    <h1>SpendMate</h1>
+    <p>Track together. Spend smarter.</p>
+  </div>
+  <div class="mode-hello" id="mode-hello">What would you like to track?</div>
+  <div class="mode-cards">
+    <button class="mode-card trip" onclick="openTripMode()">
+      <div class="mode-card-icon">✈️</div>
+      <div class="mode-card-text">
+        <div class="mode-card-title">Trip Tracking</div>
+        <div class="mode-card-sub">Split &amp; settle group trip expenses with family and friends — in real time.</div>
+      </div>
+      <div class="mode-card-arrow">›</div>
+    </button>
+    <button class="mode-card daily" onclick="openDailyMode()">
+      <div class="mode-card-icon">📔</div>
+      <div class="mode-card-text">
+        <div class="mode-card-title">Daily Expenses</div>
+        <div class="mode-card-sub">Log your everyday personal spending, set a monthly budget &amp; watch your trends.</div>
+      </div>
+      <div class="mode-card-arrow">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
      TRIPS SCREEN
 ═══════════════════════════════════════════════════ -->
 <div id="screen-trips">
@@ -542,7 +606,10 @@ window.addEventListener('appinstalled',function(){
         <h2>My Trips</h2>
         <p id="trips-welcome-msg">Loading...</p>
       </div>
-      <button class="btn-icon" onclick="toggleTheme()">🌙</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-icon" onclick="goHome()" title="SpendMate home">🏠</button>
+        <button class="btn-icon" onclick="toggleTheme()">🌙</button>
+      </div>
     </div>
   </div>
 
@@ -554,7 +621,7 @@ window.addEventListener('appinstalled',function(){
   <div class="install-banner" id="install-banner" onclick="installPWA()">
     <div class="install-banner-icon">📲</div>
     <div class="install-banner-text">
-      <div class="install-banner-title">Install TripShare App</div>
+      <div class="install-banner-title">Install SpendMate App</div>
       <div class="install-banner-sub">Add to home screen for quick access</div>
     </div>
     <button class="install-banner-btn" onclick="event.stopPropagation();installPWA()">Install</button>
@@ -816,7 +883,7 @@ window.addEventListener('appinstalled',function(){
       </div>
 
       <div class="card">
-        <div class="card-title">How to Use TripShare</div>
+        <div class="card-title">How to Use SpendMate</div>
         <div class="help-item"><div class="help-icon">➕</div><div class="help-text"><h4>Adding an Expense</h4><p>Tap <strong>+</strong> to add an expense. Select category, enter amount, choose who paid, pick payment method (Cash / UPI / Credit / Debit / Net Banking), and how to split. A <em>✍️ Added by</em> badge appears on each expense when someone adds it on behalf of the payer.</p></div></div>
         <div class="help-item"><div class="help-icon">🔗</div><div class="help-text"><h4>Sharing Your Trip</h4><p>Tap <strong>Share</strong> on the top bar to get the invite code. Trip-mates enter this code to join. If your name already exists on the trip, the app automatically links your device to that profile — no duplicate members created.</p></div></div>
         <div class="help-item"><div class="help-icon">👥</div><div class="help-text"><h4>Managing Members</h4><p>Add all people on the trip. Each gets a colour-coded avatar. As trip admin, tap <strong>⊕ Merge</strong> next to Members to combine two profiles (e.g. "Abhishek" and "Abhishek Singh") into one — all expenses are reassigned automatically.</p></div></div>
@@ -831,7 +898,7 @@ window.addEventListener('appinstalled',function(){
       <div class="card">
         <div class="card-title">About</div>
         <div style="padding:10px 0;font-size:.82rem;color:var(--text2);line-height:1.8">
-          <strong style="color:var(--text)">TripShare v1.0</strong><br/>
+          <strong style="color:var(--text)">SpendMate v1.0</strong><br/>
           Built for families and groups who travel together.<br/>
           Real-time sync · Offline-first · PWA Ready<br/>
           <span style="font-size:.72rem">Data stored locally + optional Firebase real-time sync.</span>
@@ -1057,7 +1124,7 @@ window.addEventListener('appinstalled',function(){
     </div>
     <div style="background:var(--surface2);border-radius:14px;padding:14px 16px;font-size:.8rem;line-height:2.1;border:1px solid var(--border)">
       <strong style="color:var(--primary)">1.</strong> Go to <strong>console.firebase.google.com</strong><br/>
-      <strong style="color:var(--primary)">2.</strong> Click <strong>Add Project</strong> → name it (e.g. tripshare) → Create<br/>
+      <strong style="color:var(--primary)">2.</strong> Click <strong>Add Project</strong> → name it (e.g. spendmate) → Create<br/>
       <strong style="color:var(--primary)">3.</strong> Left sidebar → <strong>Build</strong> → <strong>Firestore Database</strong><br/>
       <strong style="color:var(--primary)">4.</strong> Click <strong>Create database</strong> → choose <strong>Test mode</strong> → Done<br/>
       <strong style="color:var(--primary)">5.</strong> Left sidebar → ⚙️ <strong>Project Settings</strong> → <strong>General</strong> tab<br/>
@@ -1189,6 +1256,130 @@ window.addEventListener('appinstalled',function(){
       <strong style="color:var(--text)">PDF:</strong> Opens print dialog — select <em>Save as PDF</em> in your browser.
     </div>
     <button class="btn-submit-secondary" onclick="closeModal('modal-export')" style="margin-top:10px">Close</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     DAILY EXPENSES (DAYBOOK)
+═══════════════════════════════════════════════════ -->
+<div id="screen-daily" style="display:none">
+  <nav class="topnav">
+    <div class="logo" onclick="goHome()">
+      <div class="logo-icon">📔</div>
+      <span class="trip-name-badge">DayBook</span>
+    </div>
+    <div class="nav-actions">
+      <span class="sync-status"><span class="sync-dot"></span><span>Local</span></span>
+      <button class="btn-icon" onclick="toggleTheme()" id="theme-btn">🌙</button>
+      <button class="btn-icon" onclick="goHome()" title="SpendMate home">🏠</button>
+    </div>
+  </nav>
+
+  <div class="app-shell">
+    <div class="daily-month-bar">
+      <button class="btn-icon" onclick="changeDailyMonth(-1)" title="Previous month">‹</button>
+      <div class="daily-month-label" id="daily-month-label">Month</div>
+      <button class="btn-icon" onclick="changeDailyMonth(1)" title="Next month">›</button>
+    </div>
+
+    <div class="trip-hero daily-hero">
+      <div class="trip-hero-actions">
+        <button class="hero-btn" onclick="openDailyBudget()">🎯 Budget</button>
+      </div>
+      <div class="trip-hero-label">📔 This Month</div>
+      <div class="trip-hero-name" id="daily-hero-total">—</div>
+      <div class="trip-hero-sub" id="daily-hero-sub">Spent so far</div>
+      <div class="trip-hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val" id="daily-stat-budget">—</div><div class="hero-stat-lbl">Budget</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="daily-stat-left">—</div><div class="hero-stat-lbl">Remaining</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="daily-stat-count">0</div><div class="hero-stat-lbl">Entries</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="daily-budget-card" style="display:none">
+      <div class="card-title">Budget Progress <span class="card-title-action" onclick="openDailyBudget()">Edit →</span></div>
+      <div class="checklist-progress-wrap">
+        <div class="checklist-progress-info"><span id="daily-budget-spent">—</span><span id="daily-budget-pct">0%</span></div>
+        <div class="checklist-progress"><div class="checklist-progress-bar" id="daily-budget-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">By Category</div>
+      <div id="daily-cat-stats"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Expenses</div>
+      <div class="cat-pills" id="daily-filter-cats" style="margin-bottom:14px"></div>
+      <div id="daily-expense-list"></div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="openDailyExpense()">+</button>
+</div>
+
+<!-- ADD / EDIT DAILY EXPENSE -->
+<div class="modal-overlay" id="modal-daily-expense" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="daily-expense-modal-title">Add Expense</div>
+
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="cat-pills" id="daily-modal-cat-pills"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="daily-expense-title" type="text" placeholder="e.g. Lunch, Metro card, Electricity bill..." />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Amount</label>
+        <input class="form-input" id="daily-expense-amount" type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="daily-expense-date" type="date" />
+      </div>
+    </div>
+    <div style="height:14px"></div>
+
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <div class="pay-chips" id="daily-pay-chips">
+        <div class="pay-chip active" data-method="cash"        onclick="selectDailyPay(this)">💵 Cash</div>
+        <div class="pay-chip"        data-method="upi"         onclick="selectDailyPay(this)">📱 UPI</div>
+        <div class="pay-chip"        data-method="credit_card" onclick="selectDailyPay(this)">💳 Credit</div>
+        <div class="pay-chip"        data-method="debit_card"  onclick="selectDailyPay(this)">🏧 Debit</div>
+        <div class="pay-chip"        data-method="netbanking"  onclick="selectDailyPay(this)">🏦 Net Banking</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input class="form-input" id="daily-expense-note" placeholder="Any extra details..." />
+    </div>
+
+    <button class="btn-submit" id="daily-expense-submit-btn" onclick="submitDailyExpense()">Add Expense</button>
+    <button class="btn-submit-secondary" id="daily-expense-delete-btn" onclick="deleteDailyExpense()" style="display:none">🗑 Delete Expense</button>
+  </div>
+</div>
+
+<!-- SET MONTHLY BUDGET -->
+<div class="modal-overlay" id="modal-daily-budget" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎯 Monthly Budget</div>
+    <div class="modal-subtitle" id="daily-budget-month-label">Set your spending limit for this month</div>
+    <div class="form-group">
+      <label class="form-label">Budget Amount</label>
+      <input class="form-input" id="daily-budget-input" type="number" placeholder="0.00" min="0" step="1" inputmode="decimal" />
+    </div>
+    <button class="btn-submit" onclick="submitDailyBudget()">Save Budget</button>
+    <button class="btn-submit-secondary" onclick="clearDailyBudget()">Remove Budget</button>
   </div>
 </div>
 
@@ -1936,10 +2127,10 @@ function renderTripsScreen(){
    SCREEN NAVIGATION
 ───────────────────────────────────────────────────── */
 function showScreen(id){
-  const screens=['screen-lock','screen-auth','screen-trips','screen-app'];
+  const screens=['screen-lock','screen-auth','screen-mode','screen-trips','screen-app','screen-daily'];
   screens.forEach(s=>{
     const el=document.getElementById(s);if(!el)return;
-    el.style.display=(s===id)?(s==='screen-app'?'block':'flex'):'none';
+    el.style.display=(s===id)?((s==='screen-app'||s==='screen-daily')?'block':'flex'):'none';
     if(s==='screen-trips')el.style.display=(s===id)?'block':'none';
   });
 }
@@ -1991,10 +2182,11 @@ function unlockSuccess(){
 async function onUnlocked(){
   const saved=lsGet('current-user',null);
   if(saved&&saved.name){
-    S.user=saved;await initFirebase();await loadTrips();showScreen('screen-trips');
-    // Auto-open join modal if opened via invite link
+    S.user=saved;await initFirebase();await loadTrips();
+    // Auto-open join modal if opened via invite link — go straight to Trip mode
     const joinCode=new URLSearchParams(window.location.search).get('join');
-    if(joinCode){setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=joinCode.toUpperCase();},400);}
+    if(joinCode){showScreen('screen-trips');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=joinCode.toUpperCase();},400);}
+    else{goHome();}
   }
   else{
     showScreen('screen-auth');document.getElementById('screen-auth').style.display='flex';
@@ -2020,12 +2212,12 @@ async function continueAsGuest(){
   const color=existing?.color||MEMBER_COLORS[Math.floor(Math.random()*MEMBER_COLORS.length)];
   S.user={id:deviceId,name,color};
   lsSet('current-user',S.user);
-  // Show trips screen INSTANTLY with local data — don't wait for Firebase
+  // Load local trip data in the background — don't wait for Firebase
   S.trips=lsGet(`u:${deviceId}:trips-data`,[]);
-  showScreen('screen-trips');renderTripsScreen();
-  // Apply any pending join code
+  // Apply any pending join code (goes straight to Trip mode), else show SpendMate home
   const pc=sessionStorage.getItem('pendingJoin');
-  if(pc){sessionStorage.removeItem('pendingJoin');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
+  if(pc){sessionStorage.removeItem('pendingJoin');showScreen('screen-trips');renderTripsScreen();setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
+  else{goHome();}
   // Firebase init + sync happens in background
   initFirebase().then(()=>{
     if(FIREBASE_ENABLED&&auth&&auth.currentUser){S.user.uid=auth.currentUser.uid;lsSet('current-user',S.user);}
@@ -2558,9 +2750,9 @@ async function nativeShare(){
   const trip=curTrip();if(!trip)return;
   const code=document.getElementById('share-code-display').textContent;
   const link=document.getElementById('share-link-display').textContent;
-  const text=`Join me on TripShare for "${trip.name}"!\n\nOpen the link to join:\n${link}\n\nOr use invite code: ${code}`;
+  const text=`Join me on SpendMate for "${trip.name}"!\n\nOpen the link to join:\n${link}\n\nOr use invite code: ${code}`;
   if(navigator.share){
-    try{await navigator.share({title:'Join '+trip.name+' on TripShare',text,url:link});}
+    try{await navigator.share({title:'Join '+trip.name+' on SpendMate',text,url:link});}
     catch(e){if(e.name!=='AbortError')copyShareLink();}
   }else{copyShareLink();}
 }
@@ -2739,11 +2931,11 @@ function hideInstallBanner(){
 }
 function installPWA(){
   const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  if(isStandalone){showToast('\u2705 TripShare is already installed!');return;}
+  if(isStandalone){showToast('\u2705 SpendMate is already installed!');return;}
   if(window._pwaPrompt){
     window._pwaPrompt.prompt();
     window._pwaPrompt.userChoice.then(r=>{
-      if(r.outcome==='accepted'){hideInstallBanner();showToast('\u2705 Installing TripShare\u2026');}
+      if(r.outcome==='accepted'){hideInstallBanner();showToast('\u2705 Installing SpendMate\u2026');}
       window._pwaPrompt=null;
     });
     return;
@@ -2757,9 +2949,9 @@ function installPWA(){
   }else if(isAndroid){
     guide='On Android Chrome:\n\n1. Tap the \u22ee menu (top-right)\n2. Tap \'Add to Home screen\'\n3. Tap \'Add\'';
   }else{
-    guide='On Chrome desktop:\n\n1. Click the \u229e install icon in the address bar\nOR\n2. Click \u22ee menu \u2192 \'Install TripShare\'';
+    guide='On Chrome desktop:\n\n1. Click the \u229e install icon in the address bar\nOR\n2. Click \u22ee menu \u2192 \'Install SpendMate\'';
   }
-  showConfirm({icon:'\ud83d\udcf2',title:'Install TripShare',msg:guide,okLabel:'Got it',okClass:'primary',onOk:()=>{}});
+  showConfirm({icon:'\ud83d\udcf2',title:'Install SpendMate',msg:guide,okLabel:'Got it',okClass:'primary',onOk:()=>{}});
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2881,7 +3073,7 @@ function exportCSV(){
   const trip=curTrip();if(!trip)return;
   const sym=S.currency.symbol;
   const rows=[
-    ['TripShare Export','','','','','','','',''],
+    ['SpendMate Export','','','','','','','',''],
     ['Trip',''+trip.name,'','','','','','',''],
     ['Description',trip.description||'','','','','','','',''],
     ['Date',trip.startDate||'','','','','','','',''],
@@ -2912,7 +3104,7 @@ function exportCSV(){
   const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download='TripShare_'+trip.name.replace(/[^a-z0-9]/gi,'_')+'_'+(trip.startDate||new Date().toISOString().split('T')[0])+'.csv';
+  a.href=url;a.download='SpendMate_'+trip.name.replace(/[^a-z0-9]/gi,'_')+'_'+(trip.startDate||new Date().toISOString().split('T')[0])+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   closeModal('modal-export');
   showToast('📊 CSV downloaded!');
@@ -2937,11 +3129,252 @@ function exportPDF(){
     const f=getMember(s.from),t=getMember(s.to);if(!f||!t)return'';
     return`<tr><td>${f.name}</td><td style="text-align:center">→</td><td>${t.name}</td><td style="text-align:right;font-weight:700;color:#c00">${sym}${s.amount.toFixed(2)}</td></tr>`;
   }).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>TripShare — ${trip.name}</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#222;font-size:13px}h1{color:#7c6aff;margin-bottom:4px;font-size:22px}h2{margin:22px 0 8px;color:#444;font-size:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #7c6aff;padding-bottom:4px}.meta{color:#888;font-size:12px;margin-bottom:16px}.summary{display:flex;gap:20px;margin-bottom:20px}.stat{background:#f5f5fc;border-radius:8px;padding:12px 18px;text-align:center;min-width:100px}.stat-val{font-size:18px;font-weight:800;color:#7c6aff}.stat-lbl{font-size:11px;color:#888;margin-top:2px}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:12px}th{background:#7c6aff;color:#fff;padding:7px 9px;text-align:left;font-size:11px}td{padding:6px 9px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}.footer{margin-top:28px;font-size:11px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:12px}@media print{body{margin:15px}}</style></head><body><h1>✈️ ${trip.name}</h1><div class="meta">${trip.description||''}${trip.description?' · ':''}${trip.startDate||''}${trip.startDate?' · ':''}${S.members.length} members</div><div class="summary"><div class="stat"><div class="stat-val">${sym}${total.toFixed(2)}</div><div class="stat-lbl">Total Spent</div></div><div class="stat"><div class="stat-val">${sym}${pp.toFixed(2)}</div><div class="stat-lbl">Per Person</div></div><div class="stat"><div class="stat-val">${S.expenses.length}</div><div class="stat-lbl">Expenses</div></div></div><h2>Members</h2><p style="font-size:13px;margin:0 0 16px">${S.members.map(m=>m.name).join(' &nbsp;·&nbsp; ')}</p><h2>Expenses</h2><table><thead><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th><th>Paid By</th><th>Split Among</th><th>Method</th><th>Added By</th></tr></thead><tbody>${expRows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;border-top:2px solid #7c6aff">Total</td><td style="font-weight:800;color:#7c6aff;border-top:2px solid #7c6aff">${sym}${total.toFixed(2)}</td><td colspan="4" style="border-top:2px solid #7c6aff"></td></tr></tfoot></table><h2>Settlement Plan</h2>${settRows?`<table><thead><tr><th>From</th><th></th><th>To</th><th>Amount</th></tr></thead><tbody>${settRows}</tbody></table>`:'<p style="color:#35d07a;font-size:13px">🎉 All settled up — no payments needed!</p>'}<div class="footer">Generated by TripShare &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div></body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>SpendMate — ${trip.name}</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#222;font-size:13px}h1{color:#7c6aff;margin-bottom:4px;font-size:22px}h2{margin:22px 0 8px;color:#444;font-size:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #7c6aff;padding-bottom:4px}.meta{color:#888;font-size:12px;margin-bottom:16px}.summary{display:flex;gap:20px;margin-bottom:20px}.stat{background:#f5f5fc;border-radius:8px;padding:12px 18px;text-align:center;min-width:100px}.stat-val{font-size:18px;font-weight:800;color:#7c6aff}.stat-lbl{font-size:11px;color:#888;margin-top:2px}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:12px}th{background:#7c6aff;color:#fff;padding:7px 9px;text-align:left;font-size:11px}td{padding:6px 9px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}.footer{margin-top:28px;font-size:11px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:12px}@media print{body{margin:15px}}</style></head><body><h1>✈️ ${trip.name}</h1><div class="meta">${trip.description||''}${trip.description?' · ':''}${trip.startDate||''}${trip.startDate?' · ':''}${S.members.length} members</div><div class="summary"><div class="stat"><div class="stat-val">${sym}${total.toFixed(2)}</div><div class="stat-lbl">Total Spent</div></div><div class="stat"><div class="stat-val">${sym}${pp.toFixed(2)}</div><div class="stat-lbl">Per Person</div></div><div class="stat"><div class="stat-val">${S.expenses.length}</div><div class="stat-lbl">Expenses</div></div></div><h2>Members</h2><p style="font-size:13px;margin:0 0 16px">${S.members.map(m=>m.name).join(' &nbsp;·&nbsp; ')}</p><h2>Expenses</h2><table><thead><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th><th>Paid By</th><th>Split Among</th><th>Method</th><th>Added By</th></tr></thead><tbody>${expRows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;border-top:2px solid #7c6aff">Total</td><td style="font-weight:800;color:#7c6aff;border-top:2px solid #7c6aff">${sym}${total.toFixed(2)}</td><td colspan="4" style="border-top:2px solid #7c6aff"></td></tr></tfoot></table><h2>Settlement Plan</h2>${settRows?`<table><thead><tr><th>From</th><th></th><th>To</th><th>Amount</th></tr></thead><tbody>${settRows}</tbody></table>`:'<p style="color:#35d07a;font-size:13px">🎉 All settled up — no payments needed!</p>'}<div class="footer">Generated by SpendMate &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div></body></html>`;
   const w=window.open('','_blank');
   if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),500);}
   else showToast('⚠️ Allow pop-ups for PDF export');
   closeModal('modal-export');
+}
+
+/* ─────────────────────────────────────────────────────
+   SPENDMATE — MODE ROUTING
+───────────────────────────────────────────────────── */
+function goHome(){
+  if(typeof unsubAll==='function')unsubAll();
+  S.currentTripId=null;
+  showScreen('screen-mode');
+  const h=document.getElementById('mode-hello');
+  if(h&&S.user)h.textContent=`Hi ${S.user.name}! What would you like to track?`;
+  window.scrollTo(0,0);
+}
+function openTripMode(){
+  showScreen('screen-trips');renderTripsScreen();loadTrips();
+}
+function openDailyMode(){
+  showScreen('screen-daily');initDaily();
+}
+
+/* ─────────────────────────────────────────────────────
+   DAILY EXPENSES (DAYBOOK) — self-contained, local-first
+───────────────────────────────────────────────────── */
+const DAILY_CATS=[
+  {cat:'food',icon:'🍽️',label:'Food'},
+  {cat:'groceries',icon:'🛒',label:'Groceries'},
+  {cat:'transport',icon:'🚗',label:'Transport'},
+  {cat:'bills',icon:'🧾',label:'Bills'},
+  {cat:'shopping',icon:'🛍️',label:'Shopping'},
+  {cat:'health',icon:'💊',label:'Health'},
+  {cat:'fun',icon:'🎬',label:'Fun'},
+  {cat:'rent',icon:'🏠',label:'Rent'},
+  {cat:'other',icon:'📝',label:'Other'},
+];
+const DAILY_CAT_COLORS={
+  food:'rgba(255,106,138,.18)',groceries:'rgba(53,208,122,.18)',
+  transport:'rgba(100,180,255,.18)',bills:'rgba(255,179,71,.18)',
+  shopping:'rgba(200,100,255,.18)',health:'rgba(255,80,80,.18)',
+  fun:'rgba(124,106,255,.18)',rent:'rgba(80,200,180,.18)',other:'rgba(150,150,200,.18)',
+};
+const DAILY_CAT_BAR={
+  food:'#ff6a8a',groceries:'#35d07a',transport:'#4facfe',bills:'#ffb347',
+  shopping:'#c864ff',health:'#ff5050',fun:'#7c6aff',rent:'#50c8b4',other:'#9696c8',
+};
+const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'food',selIcon:'🍽️',selPay:'cash',filterCat:'all'};
+
+function dailyCat(key){return DAILY_CATS.find(c=>c.cat===key)||DAILY_CATS[DAILY_CATS.length-1];}
+function dailySave(){lsSet('daily:expenses',D.expenses);lsSet('daily:budgets',D.budgets);}
+function dailyMonthKey(dateStr){return(dateStr||new Date().toISOString().split('T')[0]).slice(0,7);}
+function dailyMonthNow(){return new Date().toISOString().slice(0,7);}
+function curMonthExpenses(){return D.expenses.filter(e=>dailyMonthKey(e.date)===D.month);}
+
+function initDaily(){
+  D.expenses=lsGet('daily:expenses',[]);
+  D.budgets=lsGet('daily:budgets',{});
+  if(!D.month)D.month=dailyMonthNow();
+  // keep currency in sync with the global setting (trip mode may have changed it)
+  const c=lsGet('currency','INR');if(CURRENCIES[c]){S.currency=CURRENCIES[c];S.currencyCode=c;}
+  renderDaily();
+  window.scrollTo(0,0);
+}
+
+function changeDailyMonth(delta){
+  const[y,m]=D.month.split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  D.month=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  D.filterCat='all';
+  renderDaily();
+}
+
+function renderDaily(){
+  const[y,m]=D.month.split('-').map(Number);
+  const label=new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  document.getElementById('daily-month-label').textContent=label;
+  const items=curMonthExpenses();
+  const total=items.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const budget=D.budgets[D.month]||0;
+  const remaining=budget-total;
+  document.getElementById('daily-hero-total').textContent=fmt(total);
+  document.getElementById('daily-stat-budget').textContent=budget>0?fmt(budget):'—';
+  document.getElementById('daily-stat-left').textContent=budget>0?fmt(remaining):'—';
+  document.getElementById('daily-stat-count').textContent=items.length;
+  const sub=document.getElementById('daily-hero-sub');
+  sub.textContent=(budget>0&&remaining<0)?`⚠️ Over budget by ${fmt(remaining)}`:'Spent so far';
+
+  const bc=document.getElementById('daily-budget-card');
+  if(budget>0){
+    bc.style.display='block';
+    const pct=Math.min(100,Math.round((total/budget)*100));
+    document.getElementById('daily-budget-spent').textContent=`${fmt(total)} of ${fmt(budget)}`;
+    document.getElementById('daily-budget-pct').textContent=pct+'%';
+    const bar=document.getElementById('daily-budget-bar');
+    bar.style.width=pct+'%';
+    bar.style.background=total>budget?'linear-gradient(90deg,#ff6a8a,#ff5050)':'linear-gradient(90deg,var(--primary),var(--accent2))';
+  }else bc.style.display='none';
+
+  renderDailyCatStats(items,total);
+  renderDailyFilters();
+  renderDailyList(items);
+}
+
+function renderDailyCatStats(items,total){
+  const box=document.getElementById('daily-cat-stats');
+  if(!items.length){box.innerHTML='<div class="empty-state" style="padding:16px"><p>No spending this month yet.</p></div>';return;}
+  const byCat={};
+  items.forEach(e=>{byCat[e.category]=(byCat[e.category]||0)+(parseFloat(e.amount)||0);});
+  box.innerHTML=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+    const c=dailyCat(cat);const pct=total>0?Math.round((amt/total)*100):0;
+    return`<div class="stat-row">
+      <div class="expense-icon" style="width:34px;height:34px;font-size:15px;background:${DAILY_CAT_COLORS[cat]||DAILY_CAT_COLORS.other}">${c.icon}</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span>${c.label}</span><span>${fmt(amt)} · ${pct}%</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:${DAILY_CAT_BAR[cat]||DAILY_CAT_BAR.other}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDailyFilters(){
+  const box=document.getElementById('daily-filter-cats');
+  const cats=[{cat:'all',icon:'🗂️',label:'All'},...DAILY_CATS];
+  box.innerHTML=cats.map(c=>`<div class="cat-pill${D.filterCat===c.cat?' active':''}" onclick="filterDailyCat('${c.cat}')"><div class="cat-pill-icon">${c.icon}</div><div class="cat-pill-lbl">${c.label}</div></div>`).join('');
+}
+
+function filterDailyCat(cat){D.filterCat=cat;renderDailyFilters();renderDailyList(curMonthExpenses());}
+
+function renderDailyList(items){
+  const box=document.getElementById('daily-expense-list');
+  let list=items.slice();
+  if(D.filterCat!=='all')list=list.filter(e=>e.category===D.filterCat);
+  if(!list.length){box.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon">🧾</div><p>No expenses here. Tap + to add one!</p></div>';return;}
+  const groups={};
+  list.forEach(e=>{(groups[e.date]=groups[e.date]||[]).push(e);});
+  box.innerHTML=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(date=>{
+    const dayItems=groups[date].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const dayTotal=dayItems.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const rows=dayItems.map(e=>{
+      const c=dailyCat(e.category);
+      const method=PAY_LABELS[e.paymentMethod]||'';
+      return`<div class="expense-item" onclick="openDailyExpense('${e.id}')">
+        <div class="expense-icon" style="background:${DAILY_CAT_COLORS[e.category]||DAILY_CAT_COLORS.other}">${c.icon}</div>
+        <div class="expense-details">
+          <div class="expense-name">${(e.title||c.label).replace(/</g,'&lt;')}</div>
+          <div class="expense-meta"><span class="pay-method-badge">${method}</span>${e.note?'<span>· '+e.note.replace(/</g,'&lt;')+'</span>':''}</div>
+        </div>
+        <div class="expense-amount"><div class="expense-amount-val">${fmt(e.amount)}</div></div>
+      </div>`;
+    }).join('');
+    return`<div class="daily-day-group"><div class="daily-day-header"><span>${fmtDailyDate(date)}</span><span class="daily-day-total">${fmt(dayTotal)}</span></div>${rows}</div>`;
+  }).join('');
+}
+
+function fmtDailyDate(d){
+  if(!d)return'';
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const yst=new Date(Date.now()-86400000).toISOString().split('T')[0];
+    if(d===today)return'Today';
+    if(d===yst)return'Yesterday';
+    return new Date(d).toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
+  }catch(e){return d;}
+}
+
+/* ---- daily modal handlers ---- */
+function selectDailyCat(el){
+  document.querySelectorAll('#daily-modal-cat-pills .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');D.selCat=el.dataset.cat;D.selIcon=el.dataset.icon;
+}
+function selectDailyPay(el){
+  document.querySelectorAll('#daily-pay-chips .pay-chip').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');D.selPay=el.dataset.method;
+}
+function buildDailyCatPills(active){
+  document.getElementById('daily-modal-cat-pills').innerHTML=DAILY_CATS.map(c=>`<div class="cat-pill${c.cat===active?' active':''}" data-cat="${c.cat}" data-icon="${c.icon}" onclick="selectDailyCat(this)"><div class="cat-pill-icon">${c.icon}</div><div class="cat-pill-lbl">${c.label}</div></div>`).join('');
+}
+
+function openDailyExpense(id){
+  const editing=typeof id==='string'&&!!id;
+  D.editingId=editing?id:null;
+  const e=editing?D.expenses.find(x=>x.id===id):null;
+  document.getElementById('daily-expense-modal-title').textContent=editing?'Edit Expense':'Add Expense';
+  document.getElementById('daily-expense-submit-btn').textContent=editing?'Save Changes':'Add Expense';
+  document.getElementById('daily-expense-delete-btn').style.display=editing?'block':'none';
+  const cat=e?e.category:'food';
+  D.selCat=cat;D.selIcon=dailyCat(cat).icon;
+  buildDailyCatPills(cat);
+  document.getElementById('daily-expense-title').value=e?(e.title||''):'';
+  document.getElementById('daily-expense-amount').value=e?e.amount:'';
+  const defaultDate=(D.month===dailyMonthNow())?new Date().toISOString().split('T')[0]:D.month+'-01';
+  document.getElementById('daily-expense-date').value=e?e.date:defaultDate;
+  document.getElementById('daily-expense-note').value=e?(e.note||''):'';
+  D.selPay=e?(e.paymentMethod||'cash'):'cash';
+  document.querySelectorAll('#daily-pay-chips .pay-chip').forEach(p=>p.classList.toggle('active',p.dataset.method===D.selPay));
+  openModal('modal-daily-expense');
+}
+
+function submitDailyExpense(){
+  const title=document.getElementById('daily-expense-title').value.trim();
+  const amount=parseFloat(document.getElementById('daily-expense-amount').value);
+  const date=document.getElementById('daily-expense-date').value;
+  const note=document.getElementById('daily-expense-note').value.trim();
+  if(!amount||amount<=0){showToast('⚠️ Enter a valid amount');return;}
+  if(!date){showToast('⚠️ Pick a date');return;}
+  if(D.editingId){
+    const idx=D.expenses.findIndex(x=>x.id===D.editingId);
+    if(idx>-1)D.expenses[idx]={...D.expenses[idx],title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay};
+    showToast('✅ Expense updated');
+  }else{
+    D.expenses.unshift({id:genId(),title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,createdAt:Date.now()});
+    showToast('✅ Expense added');
+  }
+  dailySave();
+  D.month=dailyMonthKey(date);
+  D.editingId=null;
+  closeModal('modal-daily-expense');
+  renderDaily();
+}
+
+function deleteDailyExpense(){
+  if(!D.editingId)return;
+  const id=D.editingId;
+  showConfirm({icon:'🗑',title:'Delete Expense?',msg:'This will permanently remove this entry.',okLabel:'Delete',onOk:()=>{
+    D.expenses=D.expenses.filter(x=>x.id!==id);
+    dailySave();D.editingId=null;closeModal('modal-daily-expense');renderDaily();showToast('🗑 Deleted');
+  }});
+}
+
+function openDailyBudget(){
+  const[y,m]=D.month.split('-').map(Number);
+  const label=new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  document.getElementById('daily-budget-month-label').textContent=`Spending limit for ${label}`;
+  document.getElementById('daily-budget-input').value=D.budgets[D.month]||'';
+  openModal('modal-daily-budget');
+}
+function submitDailyBudget(){
+  const v=parseFloat(document.getElementById('daily-budget-input').value);
+  if(!v||v<=0){showToast('⚠️ Enter a valid amount');return;}
+  D.budgets[D.month]=v;dailySave();closeModal('modal-daily-budget');renderDaily();showToast('🎯 Budget set');
+}
+function clearDailyBudget(){
+  delete D.budgets[D.month];dailySave();closeModal('modal-daily-budget');renderDaily();showToast('Budget removed');
 }
 
 /* ─────────────────────────────────────────────────────
