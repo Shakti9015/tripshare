@@ -1567,9 +1567,19 @@ async function loadTrips(){
   if(FIREBASE_ENABLED&&db){
     try{
       const ids=lsGet(`u:${uid}:trips`,[]);
+      const localData=lsGet(`u:${uid}:trips-data`,[]);
       // Fetch all trips in parallel instead of one-by-one
       const docs=await Promise.all(ids.map(id=>db.collection('trips').doc(id).get()));
-      S.trips=docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()}));
+      S.trips=docs.map((d,i)=>{
+        if(d.exists)return{id:d.id,...d.data()};
+        // Cloud trip document is missing (e.g. it failed to write when the
+        // trip was created offline) but its expenses/members sub-collections
+        // may still exist. Recover the header from the local cache and repair
+        // the cloud copy so the trip stops disappearing from the list.
+        const local=localData.find(t=>t.id===ids[i]);
+        if(local){db.collection('trips').doc(local.id).set(local,{merge:true}).catch(()=>{});return local;}
+        return null;
+      }).filter(Boolean);
       lsSet(`u:${uid}:trips-data`,S.trips);
     }catch(e){ S.trips=lsGet(`u:${uid}:trips-data`,[]); }
   }else{
@@ -1585,13 +1595,11 @@ async function createTrip(data){
     startDate:data.startDate||new Date().toISOString().split('T')[0],
     createdBy:S.user.id,adminId:S.user.id,createdAt:Date.now(),totalExpenses:0,
   };
-  if(FIREBASE_ENABLED&&db){
-    try{
-      await db.collection('trips').doc(trip.id).set(trip);
-      await db.collection('invites').doc(trip.inviteCode).set({tripId:trip.id,createdBy:S.user.id,createdAt:Date.now()});
-      await addMemberToTrip(trip.id,{name:S.user.name,color:S.user.color,userId:S.user.id});
-    }catch(e){}
-  }
+  // Build the creator member once so the cloud and local copies share one ID.
+  const creator={id:genId(),name:S.user.name,color:S.user.color,userId:S.user.id,group:'',createdAt:Date.now()};
+  const inviteData={tripId:trip.id,createdBy:S.user.id,createdAt:Date.now()};
+  // Local-first: persist everything on the device before touching the network
+  // so nothing is lost if the cloud write fails.
   S.trips.unshift(trip);
   const uid=S.user.id;
   const ids=lsGet(`u:${uid}:trips`,[]);
@@ -1599,10 +1607,21 @@ async function createTrip(data){
   lsSet(`u:${uid}:trips`,ids);
   lsSet(`u:${uid}:trips-data`,S.trips);
   lsSet(`invite:${trip.inviteCode}`,trip.id);
-  const creator={id:genId(),name:S.user.name,color:S.user.color,userId:S.user.id,group:'',createdAt:Date.now()};
   lsSet(`trip:${trip.id}:members`,[creator]);
   lsSet(`trip:${trip.id}:expenses`,[]);
   lsSet(`trip:${trip.id}:meta`,trip);
+  // Cloud: if any write fails (e.g. offline), queue a repair so the trip
+  // document is never orphaned from its sub-collections.
+  if(FIREBASE_ENABLED&&db){
+    try{
+      await db.collection('trips').doc(trip.id).set(trip);
+      await db.collection('invites').doc(trip.inviteCode).set(inviteData);
+      await db.collection('trips').doc(trip.id).collection('members').doc(creator.id).set(creator);
+    }catch(e){
+      addToQueue('createTrip',{trip,inviteCode:trip.inviteCode,inviteData,member:creator},trip.id);
+      setSyncStatus('offline');
+    }
+  }
   return trip;
 }
 
@@ -1740,20 +1759,33 @@ async function addMemberToTrip(tripId,data){
 /* ─────────────────────────────────────────────────────
    DATA — EXPENSES
 ───────────────────────────────────────────────────── */
+// Keep expenses ordered by the expense's own calendar date (newest first),
+// so an entry added late for an earlier day still slots into the right place.
+// Ties (same date) fall back to the order they were entered.
+function sortExpensesByDate(){
+  S.expenses.sort((a,b)=>{
+    const da=a.date||'',db=b.date||'';
+    if(da!==db)return da<db?1:-1;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+}
+
 async function loadExpenses(tripId){
   if(FIREBASE_ENABLED&&db){
     try{
       const snap=await db.collection('trips').doc(tripId).collection('expenses').orderBy('createdAt','desc').get();
       S.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
-      lsSet(`trip:${tripId}:expenses`,S.expenses);return;
+      lsSet(`trip:${tripId}:expenses`,S.expenses);sortExpensesByDate();return;
     }catch(e){}
   }
   S.expenses=lsGet(`trip:${tripId}:expenses`,[]);
+  sortExpensesByDate();
 }
 
 async function addExpense(tripId,data){
   const exp={id:genId(),...data,createdBy:S.user.id,createdAt:Date.now()};
   S.expenses.unshift(exp);
+  sortExpensesByDate();
   lsSet(`trip:${tripId}:expenses`,S.expenses);
   syncTripTotal(tripId);renderAll();
   if(FIREBASE_ENABLED&&db){
@@ -1798,7 +1830,7 @@ function subscribeTrip(tripId){
     .orderBy('createdAt','desc')
     .onSnapshot(snap=>{
       S.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
-      lsSet(`trip:${tripId}:expenses`,S.expenses);renderAll();setSyncStatus('synced');
+      lsSet(`trip:${tripId}:expenses`,S.expenses);sortExpensesByDate();renderAll();setSyncStatus('synced');
     },()=>setSyncStatus('offline'));
   unsubMem=db.collection('trips').doc(tripId).collection('members')
     .onSnapshot(snap=>{
@@ -1828,6 +1860,12 @@ async function processQueue(){
     try{
       if(item.op==='add')await db.collection('trips').doc(item.tripId).collection('expenses').doc(item.data.id).set(item.data);
       else if(item.op==='delete')await db.collection('trips').doc(item.tripId).collection('expenses').doc(item.data.id).delete();
+      else if(item.op==='createTrip'){
+        await db.collection('trips').doc(item.data.trip.id).set(item.data.trip,{merge:true});
+        await db.collection('invites').doc(item.data.inviteCode).set(item.data.inviteData,{merge:true});
+        await db.collection('trips').doc(item.data.trip.id).collection('members').doc(item.data.member.id).set(item.data.member,{merge:true});
+      }
+      else if(item.op==='trip-set')await db.collection('trips').doc(item.data.id).set(item.data,{merge:true});
     }catch(e){rem.push(item);}
   }
   lsSet('offq',rem);
@@ -2549,6 +2587,7 @@ async function submitExpense(){
     if(old){
       const up={...old,...expData};
       S.expenses=S.expenses.map(e=>e.id===editingId?up:e);
+      sortExpensesByDate();
       lsSet(`trip:${tripId}:expenses`,S.expenses);syncTripTotal(tripId);
       if(FIREBASE_ENABLED&&db){try{await db.collection('trips').doc(tripId).collection('expenses').doc(editingId).update(expData);}catch(e){}}
       showToast('✅ Expense updated!');
