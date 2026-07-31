@@ -395,6 +395,10 @@ select.form-input{cursor:pointer}
 .invite-code-box{background:var(--surface2);border:1.5px dashed var(--primary);border-radius:16px;padding:18px;text-align:center;margin:12px 0}
 .invite-code-val{font-size:2rem;font-weight:900;letter-spacing:5px;color:var(--primary);font-family:monospace}
 .invite-code-hint{font-size:.76rem;color:var(--text2);margin-top:6px}
+.daily-members{display:flex;flex-direction:column;gap:8px}
+.daily-member-chip{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:9px 12px;font-size:.85rem;font-weight:600}
+.daily-member-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}
+.daily-member-tag{margin-left:auto;font-size:.68rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .btn-copy{background:var(--primary-glow);border:1px solid var(--primary);color:var(--primary);border-radius:10px;padding:8px 18px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:10px;transition:all .2s}
 .btn-copy:hover{background:var(--primary);color:#fff}
 
@@ -1269,7 +1273,8 @@ window.addEventListener('appinstalled',function(){
       <span class="trip-name-badge">DayBook</span>
     </div>
     <div class="nav-actions">
-      <span class="sync-status"><span class="sync-dot"></span><span>Local</span></span>
+      <span class="sync-status" id="daily-sync-status"><span class="sync-dot" id="daily-sync-dot"></span><span id="daily-sync-label">Local</span></span>
+      <button class="btn-icon" onclick="openDailyShare()" title="Share DayBook with partner">👥</button>
       <button class="btn-icon" onclick="toggleTheme()" id="theme-btn">🌙</button>
       <button class="btn-icon" onclick="goHome()" title="SpendMate home">🏠</button>
     </div>
@@ -1381,6 +1386,66 @@ window.addEventListener('appinstalled',function(){
     </div>
     <button class="btn-submit" onclick="submitDailyBudget()">Save Budget</button>
     <button class="btn-submit-secondary" onclick="clearDailyBudget()">Remove Budget</button>
+  </div>
+</div>
+
+<!-- SHARE DAYBOOK -->
+<div class="modal-overlay" id="modal-daily-share" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Share DayBook</div>
+    <div class="modal-subtitle">Log everyday expenses together with your partner in real time.</div>
+
+    <div id="daily-share-setup">
+      <button class="btn-submit" id="daily-enable-share-btn" onclick="enableDailySharing()">🔗 Create a Shared DayBook</button>
+      <p style="font-size:.74rem;color:var(--text2);text-align:center;margin:10px 0;line-height:1.7">Your current entries move to the cloud and you get an invite code to share.</p>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:.72rem;margin:14px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>ALREADY HAVE A CODE?<div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <button class="btn-submit-secondary" onclick="openDailyJoin()">Join your partner's DayBook →</button>
+    </div>
+
+    <div id="daily-share-active" style="display:none">
+      <div class="invite-code-box">
+        <div class="invite-code-val" id="daily-share-code">——</div>
+        <div class="invite-code-hint">Share this code with your partner</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">
+          <button class="btn-copy" onclick="copyDailyCode()">📋 Copy Code</button>
+          <button class="btn-copy" onclick="copyDailyLink()">🔗 Copy Link</button>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:10px 0 4px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:.7rem;color:var(--text3);flex-shrink:0">🔗</span>
+        <div id="daily-share-link" style="font-size:.7rem;color:var(--primary);word-break:break-all;flex:1"></div>
+      </div>
+      <button class="btn-submit" id="daily-native-share" onclick="dailyNativeShare()" style="margin-top:6px">📤 Share via WhatsApp / SMS</button>
+      <div class="card-title" style="margin:16px 0 8px">Members</div>
+      <div id="daily-members" class="daily-members"></div>
+      <button class="btn-submit-secondary" onclick="leaveDailyDaybook()" style="margin-top:10px">🚪 Switch back to my local DayBook</button>
+    </div>
+
+    <div id="daily-firebase-notice" style="background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);border-radius:12px;padding:12px;font-size:.78rem;color:var(--accent3);line-height:1.6;margin:12px 0 4px;display:none">
+      ⚠️ <strong>Local mode:</strong> Real-time sharing needs Firebase to be configured for this app.
+    </div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-daily-share')" style="margin-top:10px">Close</button>
+  </div>
+</div>
+
+<!-- JOIN DAYBOOK -->
+<div class="modal-overlay" id="modal-daily-join" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Join a DayBook</div>
+    <div class="modal-subtitle">Enter the invite code your partner shared</div>
+    <div class="form-group">
+      <label class="form-label">Invite Code</label>
+      <input class="form-input" id="daily-join-code" type="text" placeholder="e.g. GOAT-AB12"
+             maxlength="12" style="text-transform:uppercase;letter-spacing:3px;font-size:1.2rem;text-align:center;font-family:monospace"
+             oninput="this.value=this.value.toUpperCase()" />
+    </div>
+    <div id="daily-join-error" style="color:var(--accent);font-size:.8rem;margin:-8px 0 10px;display:none"></div>
+    <button class="btn-submit" id="daily-join-btn" onclick="submitDailyJoin()">Join →</button>
+    <p style="text-align:center;font-size:.75rem;color:var(--text3);margin-top:10px">Ask your partner to tap 👥 Share to get the code</p>
   </div>
 </div>
 
@@ -2224,14 +2289,18 @@ async function onUnlocked(){
     S.user=saved;await initFirebase();await loadTrips();
     // Auto-open join modal if opened via invite link — go straight to Trip mode
     const joinCode=new URLSearchParams(window.location.search).get('join');
-    if(joinCode){showScreen('screen-trips');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=joinCode.toUpperCase();},400);}
+    const joinDay=new URLSearchParams(window.location.search).get('joinday');
+    if(joinDay){openDailyMode();setTimeout(()=>{openDailyJoin();const ji=document.getElementById('daily-join-code');if(ji)ji.value=joinDay.toUpperCase();},400);}
+    else if(joinCode){showScreen('screen-trips');setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=joinCode.toUpperCase();},400);}
     else{goHome();}
   }
   else{
     showScreen('screen-auth');document.getElementById('screen-auth').style.display='flex';
     // Carry forward join code to after auth
     const joinCode=new URLSearchParams(window.location.search).get('join');
-    if(joinCode){sessionStorage.setItem('pendingJoin',joinCode);}
+    const joinDay=new URLSearchParams(window.location.search).get('joinday');
+    if(joinDay){sessionStorage.setItem('pendingJoinDay',joinDay);}
+    else if(joinCode){sessionStorage.setItem('pendingJoin',joinCode);}
   }
 }
 
@@ -2255,7 +2324,9 @@ async function continueAsGuest(){
   S.trips=lsGet(`u:${deviceId}:trips-data`,[]);
   // Apply any pending join code (goes straight to Trip mode), else show SpendMate home
   const pc=sessionStorage.getItem('pendingJoin');
-  if(pc){sessionStorage.removeItem('pendingJoin');showScreen('screen-trips');renderTripsScreen();setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
+  const pcDay=sessionStorage.getItem('pendingJoinDay');
+  if(pcDay){sessionStorage.removeItem('pendingJoinDay');openDailyMode();setTimeout(()=>{openDailyJoin();const ji=document.getElementById('daily-join-code');if(ji)ji.value=pcDay.toUpperCase();},400);}
+  else if(pc){sessionStorage.removeItem('pendingJoin');showScreen('screen-trips');renderTripsScreen();setTimeout(()=>{openJoinTrip();const ji=document.getElementById('join-code');if(ji)ji.value=pc.toUpperCase();},400);}
   else{goHome();}
   // Firebase init + sync happens in background
   initFirebase().then(()=>{
@@ -3227,15 +3298,35 @@ const DAILY_CAT_BAR={
 };
 // Migrate expenses saved under the old category keys to the new scheme
 const DAILY_CAT_MIGRATE={food:'dining',bills:'utilities',shopping:'household',fun:'dining'};
-const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'groceries',selIcon:'🛒',selPay:'cash',filterCat:'all'};
+const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'groceries',selIcon:'🛒',selPay:'cash',filterCat:'all',
+  daybookId:null,inviteCode:null,ownerId:null,members:[]};
+let dailyUnsub=null;
+function dailyIsShared(){return !!D.daybookId;}
 
 function dailyCat(key){return DAILY_CATS.find(c=>c.cat===key)||DAILY_CATS[DAILY_CATS.length-1];}
-function dailySave(){lsSet('daily:expenses',D.expenses);lsSet('daily:budgets',D.budgets);}
+function dailySave(){
+  lsSet('daily:expenses',D.expenses);
+  // Budgets live in the cloud daybook doc while sharing; keep local budgets untouched then.
+  if(!dailyIsShared())lsSet('daily:budgets',D.budgets);
+}
 function dailyMonthKey(dateStr){return(dateStr||new Date().toISOString().split('T')[0]).slice(0,7);}
 function dailyMonthNow(){return new Date().toISOString().slice(0,7);}
 function curMonthExpenses(){return D.expenses.filter(e=>dailyMonthKey(e.date)===D.month);}
 
 function initDaily(){
+  if(!D.month)D.month=dailyMonthNow();
+  // keep currency in sync with the global setting (trip mode may have changed it)
+  const cur=lsGet('currency','INR');if(CURRENCIES[cur]){S.currency=CURRENCIES[cur];S.currencyCode=cur;}
+  // Reconnect to a shared DayBook if this device previously joined one
+  const shared=lsGet('daily:daybook',null);
+  if(shared&&FIREBASE_ENABLED&&db){
+    D.daybookId=shared.id;D.inviteCode=shared.inviteCode;
+    D.expenses=lsGet('daily:expenses',[]);
+    subscribeDaybook(shared.id);
+    renderDaily();window.scrollTo(0,0);return;
+  }
+  D.daybookId=null;D.inviteCode=null;D.members=[];D.ownerId=null;
+  setDailySyncLabel('local');
   D.expenses=lsGet('daily:expenses',[]);
   D.budgets=lsGet('daily:budgets',{});
   // Move any expenses stored under retired category keys onto the new scheme
@@ -3245,9 +3336,6 @@ function initDaily(){
     if(next){e.category=next;e.icon=dailyCat(next).icon;migrated=true;}
   });
   if(migrated)dailySave();
-  if(!D.month)D.month=dailyMonthNow();
-  // keep currency in sync with the global setting (trip mode may have changed it)
-  const c=lsGet('currency','INR');if(CURRENCIES[c]){S.currency=CURRENCIES[c];S.currencyCode=c;}
   renderDaily();
   window.scrollTo(0,0);
 }
@@ -3329,11 +3417,12 @@ function renderDailyList(items){
     const rows=dayItems.map(e=>{
       const c=dailyCat(e.category);
       const method=PAY_LABELS[e.paymentMethod]||'';
+      const who=(dailyIsShared()&&e.addedByName)?`<span>· ✍️ ${e.addedByName.replace(/</g,'&lt;')}</span>`:'';
       return`<div class="expense-item" onclick="openDailyExpense('${e.id}')">
         <div class="expense-icon" style="background:${DAILY_CAT_COLORS[e.category]||DAILY_CAT_COLORS.other}">${c.icon}</div>
         <div class="expense-details">
           <div class="expense-name">${(e.title||c.label).replace(/</g,'&lt;')}</div>
-          <div class="expense-meta"><span class="pay-method-badge">${method}</span>${e.note?'<span>· '+e.note.replace(/</g,'&lt;')+'</span>':''}</div>
+          <div class="expense-meta"><span class="pay-method-badge">${method}</span>${e.note?'<span>· '+e.note.replace(/</g,'&lt;')+'</span>':''}${who}</div>
         </div>
         <div class="expense-amount"><div class="expense-amount-val">${fmt(e.amount)}</div></div>
       </div>`;
@@ -3394,11 +3483,15 @@ function submitDailyExpense(){
   if(!amount||amount<=0){showToast('⚠️ Enter a valid amount');return;}
   if(!date){showToast('⚠️ Pick a date');return;}
   if(D.editingId){
+    const changes={title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay};
     const idx=D.expenses.findIndex(x=>x.id===D.editingId);
-    if(idx>-1)D.expenses[idx]={...D.expenses[idx],title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay};
+    if(idx>-1){D.expenses[idx]={...D.expenses[idx],...changes};if(dailyIsShared())dailyCloudSet(D.editingId,D.expenses[idx]);}
     showToast('✅ Expense updated');
   }else{
-    D.expenses.unshift({id:genId(),title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,createdAt:Date.now()});
+    const exp={id:genId(),title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,
+      addedByName:S.user?.name||'',addedById:S.user?.id||'',createdAt:Date.now()};
+    D.expenses.unshift(exp);
+    if(dailyIsShared())dailyCloudSet(exp.id,exp);
     showToast('✅ Expense added');
   }
   dailySave();
@@ -3413,6 +3506,7 @@ function deleteDailyExpense(){
   const id=D.editingId;
   showConfirm({icon:'🗑',title:'Delete Expense?',msg:'This will permanently remove this entry.',okLabel:'Delete',onOk:()=>{
     D.expenses=D.expenses.filter(x=>x.id!==id);
+    if(dailyIsShared())dailyCloudDelete(id);
     dailySave();D.editingId=null;closeModal('modal-daily-expense');renderDaily();showToast('🗑 Deleted');
   }});
 }
@@ -3427,10 +3521,196 @@ function openDailyBudget(){
 function submitDailyBudget(){
   const v=parseFloat(document.getElementById('daily-budget-input').value);
   if(!v||v<=0){showToast('⚠️ Enter a valid amount');return;}
-  D.budgets[D.month]=v;dailySave();closeModal('modal-daily-budget');renderDaily();showToast('🎯 Budget set');
+  D.budgets[D.month]=v;dailySave();dailyCloudBudgets();closeModal('modal-daily-budget');renderDaily();showToast('🎯 Budget set');
 }
 function clearDailyBudget(){
-  delete D.budgets[D.month];dailySave();closeModal('modal-daily-budget');renderDaily();showToast('Budget removed');
+  delete D.budgets[D.month];dailySave();dailyCloudBudgets();closeModal('modal-daily-budget');renderDaily();showToast('Budget removed');
+}
+
+/* ─────────────────────────────────────────────────────
+   SHARED DAYBOOK (partner sync via invite code)
+───────────────────────────────────────────────────── */
+function setDailySyncLabel(state){
+  const dot=document.getElementById('daily-sync-dot'),lbl=document.getElementById('daily-sync-label');
+  if(!dot||!lbl)return;
+  dot.className='sync-dot';
+  const map={local:'Local',syncing:'Syncing…',synced:'Shared',offline:'Offline'};
+  lbl.textContent=map[state]||'Local';
+  if(state==='syncing')dot.classList.add('syncing');
+  if(state==='offline')dot.classList.add('offline');
+}
+
+// Cloud writers — no-ops when Firebase is unavailable; the offline cache still holds the data.
+function dailyCloudSet(id,exp){
+  if(!FIREBASE_ENABLED||!db||!D.daybookId)return;
+  db.collection('daybooks').doc(D.daybookId).collection('expenses').doc(id).set(exp).catch(()=>setDailySyncLabel('offline'));
+}
+function dailyCloudDelete(id){
+  if(!FIREBASE_ENABLED||!db||!D.daybookId)return;
+  db.collection('daybooks').doc(D.daybookId).collection('expenses').doc(id).delete().catch(()=>{});
+}
+function dailyCloudBudgets(){
+  if(!FIREBASE_ENABLED||!db||!D.daybookId)return;
+  db.collection('daybooks').doc(D.daybookId).update({budgets:D.budgets}).catch(()=>{});
+}
+
+function subscribeDaybook(id){
+  if(!FIREBASE_ENABLED||!db)return;
+  if(dailyUnsub){dailyUnsub();dailyUnsub=null;}
+  setDailySyncLabel('syncing');
+  const u1=db.collection('daybooks').doc(id).onSnapshot(doc=>{
+    if(!doc.exists){
+      // The shared daybook was removed — fall back to local mode
+      if(dailyUnsub){dailyUnsub();dailyUnsub=null;}
+      D.daybookId=null;D.inviteCode=null;D.members=[];D.ownerId=null;
+      lsDel('daily:daybook');setDailySyncLabel('local');renderDaily();
+      return;
+    }
+    const data=doc.data();
+    D.members=data.members||[];
+    D.budgets=data.budgets||{};
+    D.inviteCode=data.inviteCode;
+    D.ownerId=data.ownerId;
+    renderDailyMembers();renderDaily();setDailySyncLabel('synced');
+  },()=>setDailySyncLabel('offline'));
+  const u2=db.collection('daybooks').doc(id).collection('expenses').onSnapshot(snap=>{
+    D.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+    lsSet('daily:expenses',D.expenses);
+    renderDaily();setDailySyncLabel('synced');
+  },()=>setDailySyncLabel('offline'));
+  dailyUnsub=()=>{u1();u2();};
+}
+
+async function enableDailySharing(){
+  if(!S.user){showToast('⚠️ Please set your name first');return;}
+  if(!FIREBASE_ENABLED||!db){showToast('⚠️ Real-time sharing needs Firebase');return;}
+  const btn=document.getElementById('daily-enable-share-btn');
+  if(btn){btn.disabled=true;btn.textContent='Setting up…';}
+  const dbId=genId(),code=genCode();
+  const owner={id:S.user.id,name:S.user.name,color:S.user.color||MEMBER_COLORS[0]};
+  const daybook={id:dbId,ownerId:S.user.id,ownerName:S.user.name,inviteCode:code,members:[owner],budgets:D.budgets||{},createdAt:Date.now()};
+  try{
+    await db.collection('daybooks').doc(dbId).set(daybook);
+    await db.collection('dayinvites').doc(code).set({daybookId:dbId});
+    if(D.expenses.length){
+      const batch=db.batch();
+      D.expenses.forEach(e=>{
+        const ref=db.collection('daybooks').doc(dbId).collection('expenses').doc(e.id);
+        batch.set(ref,{...e,addedByName:e.addedByName||S.user.name,addedById:e.addedById||S.user.id});
+      });
+      await batch.commit();
+    }
+    D.daybookId=dbId;D.inviteCode=code;D.ownerId=S.user.id;D.members=[owner];
+    lsSet('daily:daybook',{id:dbId,inviteCode:code});
+    subscribeDaybook(dbId);
+    renderDailyShareModal();
+    showToast('✅ Sharing enabled!');
+  }catch(e){
+    console.error('enableDailySharing failed:',e);
+    showToast('⚠️ Could not enable sharing. Try again.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🔗 Create a Shared DayBook';}
+  }
+}
+
+async function joinDaybook(code){
+  const c=(code||'').trim().toUpperCase();
+  if(!S.user)return{success:false,error:'Please set your name first.'};
+  if(!FIREBASE_ENABLED||!db)return{success:false,error:'Real-time sharing needs Firebase to be configured.'};
+  let daybookId=null;
+  try{
+    const inv=await db.collection('dayinvites').doc(c).get();
+    if(inv.exists)daybookId=inv.data().daybookId;
+  }catch(e){return{success:false,error:'Could not reach the server. Check your connection.'};}
+  if(!daybookId)return{success:false,error:'Invite code not found. Check the code and try again.'};
+  try{
+    const ref=db.collection('daybooks').doc(daybookId);
+    const doc=await ref.get();
+    if(!doc.exists)return{success:false,error:'Shared DayBook not found.'};
+    const data=doc.data();
+    const members=data.members||[];
+    if(!members.some(m=>m.id===S.user.id)){
+      members.push({id:S.user.id,name:S.user.name,color:S.user.color||MEMBER_COLORS[0]});
+      await ref.update({members});
+    }
+    D.daybookId=daybookId;D.inviteCode=data.inviteCode;D.ownerId=data.ownerId;
+    lsSet('daily:daybook',{id:daybookId,inviteCode:data.inviteCode});
+    subscribeDaybook(daybookId);
+    return{success:true};
+  }catch(e){return{success:false,error:'Could not join. Try again.'};}
+}
+
+function openDailyShare(){renderDailyShareModal();openModal('modal-daily-share');}
+function renderDailyShareModal(){
+  const shared=dailyIsShared();
+  const setup=document.getElementById('daily-share-setup');
+  const active=document.getElementById('daily-share-active');
+  if(setup)setup.style.display=shared?'none':'block';
+  if(active)active.style.display=shared?'block':'none';
+  const notice=document.getElementById('daily-firebase-notice');
+  if(notice)notice.style.display=FIREBASE_ENABLED?'none':'block';
+  if(shared){
+    document.getElementById('daily-share-code').textContent=D.inviteCode||'——';
+    const link=window.location.href.split('?')[0]+'?joinday='+(D.inviteCode||'');
+    document.getElementById('daily-share-link').textContent=link;
+    const nb=document.getElementById('daily-native-share');if(nb)nb.style.display=navigator.share?'block':'none';
+    renderDailyMembers();
+  }
+}
+function renderDailyMembers(){
+  const box=document.getElementById('daily-members');if(!box)return;
+  box.innerHTML=(D.members||[]).map(m=>{
+    const tag=m.id===D.ownerId?'<span class="daily-member-tag">Owner</span>':(m.id===S.user?.id?'<span class="daily-member-tag">You</span>':'');
+    return`<div class="daily-member-chip"><span class="daily-member-av" style="background:${m.color||MEMBER_COLORS[0]}">${memberInitials(m.name)}</span><span>${(m.name||'').replace(/</g,'&lt;')}</span>${tag}</div>`;
+  }).join('')||'<p style="font-size:.78rem;color:var(--text3)">No members yet.</p>';
+}
+
+function openDailyJoin(){
+  closeModal('modal-daily-share');
+  const inp=document.getElementById('daily-join-code');if(inp)inp.value='';
+  document.getElementById('daily-join-error').style.display='none';
+  openModal('modal-daily-join');
+}
+async function submitDailyJoin(){
+  const code=document.getElementById('daily-join-code').value.trim();
+  if(!code){showToast('⚠️ Enter an invite code');return;}
+  const errEl=document.getElementById('daily-join-error');errEl.style.display='none';
+  const btn=document.getElementById('daily-join-btn');btn.disabled=true;btn.textContent='Joining…';
+  try{
+    const res=await joinDaybook(code);
+    if(res.success){closeModal('modal-daily-join');showToast('✅ Joined DayBook!');renderDaily();}
+    else{errEl.textContent=res.error;errEl.style.display='block';}
+  }catch(e){errEl.textContent='An error occurred. Try again.';errEl.style.display='block';}
+  finally{btn.disabled=false;btn.textContent='Join →';}
+}
+
+function copyDailyCode(){
+  const code=document.getElementById('daily-share-code').textContent;
+  if(navigator.clipboard)navigator.clipboard.writeText(code).then(()=>showToast('📋 Code copied!'));
+  else{const el=document.createElement('input');el.value=code;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('📋 Code copied!');}
+}
+function copyDailyLink(){
+  const link=document.getElementById('daily-share-link').textContent;
+  if(navigator.clipboard)navigator.clipboard.writeText(link).then(()=>showToast('🔗 Link copied!'));
+  else{const el=document.createElement('input');el.value=link;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('🔗 Link copied!');}
+}
+async function dailyNativeShare(){
+  const code=document.getElementById('daily-share-code').textContent;
+  const link=document.getElementById('daily-share-link').textContent;
+  const text=`Let's track our daily expenses together on SpendMate!\n\nOpen the link to join:\n${link}\n\nOr use invite code: ${code}`;
+  if(navigator.share){try{await navigator.share({title:'Join my DayBook on SpendMate',text,url:link});}catch(e){if(e.name!=='AbortError')copyDailyLink();}}
+  else copyDailyLink();
+}
+
+function leaveDailyDaybook(){
+  showConfirm({icon:'🚪',title:'Switch to local DayBook?',msg:'You will stop syncing with your partner. Shared entries stay in the cloud for the others.',okLabel:'Switch',onOk:()=>{
+    if(dailyUnsub){dailyUnsub();dailyUnsub=null;}
+    D.daybookId=null;D.inviteCode=null;D.members=[];D.ownerId=null;
+    lsDel('daily:daybook');
+    setDailySyncLabel('local');
+    D.budgets=lsGet('daily:budgets',{});
+    closeModal('modal-daily-share');renderDaily();showToast('Switched to local DayBook');
+  }});
 }
 
 /* ─────────────────────────────────────────────────────

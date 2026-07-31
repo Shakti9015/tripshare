@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────
+// SpendMate (project: tripshare-june) Firestore security rules
+//
+// IMPORTANT CONTEXT:
+//   The app has NO login/authentication — it identifies users by a
+//   device ID kept in the browser and shares trips via invite codes.
+//   Because there is no auth, rules cannot be locked to a signed-in
+//   user. These rules therefore ALLOW anonymous access, but ONLY to
+//   the specific collections the app actually uses, with light shape
+//   validation, and — unlike Firestore "test mode" — they DO NOT
+//   expire. Test-mode rules expire after ~30 days, which is what took
+//   the app offline.
+//
+//   For stronger security later, enable Anonymous Auth in Firebase and
+//   gate writes on `request.auth != null` (requires a small app change
+//   to load the firebase-auth SDK and sign in anonymously).
+// ─────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Invite codes: map a share code -> tripId. Small, low-risk docs.
+    match /invites/{code} {
+      allow read: if true;
+      allow create, update: if isInvite(request.resource.data);
+      allow delete: if false; // never allow invite deletion from clients
+    }
+
+    // Trips and their sub-collections (members, expenses).
+    match /trips/{tripId} {
+      allow read: if true;
+      allow create, update: if isTrip(request.resource.data);
+      allow delete: if true; // app lets an admin remove a trip
+
+      match /members/{memberId} {
+        allow read: if true;
+        allow write: if isSmallDoc();
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if true;
+        allow write: if isSmallDoc();
+      }
+    }
+
+    // Shared DayBook invite codes: map a share code -> daybookId.
+    match /dayinvites/{code} {
+      allow read: if true;
+      allow create, update: if isDayInvite(request.resource.data);
+      allow delete: if false;
+    }
+
+    // Shared personal DayBooks and their expenses sub-collection.
+    match /daybooks/{daybookId} {
+      allow read: if true;
+      allow create, update: if isDaybook(request.resource.data);
+      allow delete: if true;
+
+      match /expenses/{expenseId} {
+        allow read: if true;
+        allow write: if isSmallDoc();
+      }
+    }
+
+    // Everything else is denied by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+  // Keep documents to a sane size to limit abuse (Firestore max is 1MiB).
+  function isSmallDoc() {
+    return request.resource == null
+      || request.resource.data.size() < 60;
+  }
+
+  function isInvite(d) {
+    return d.keys().hasAll(['tripId'])
+      && d.tripId is string
+      && d.tripId.size() > 0
+      && d.tripId.size() < 200;
+  }
+
+  function isTrip(d) {
+    return d.name is string
+      && d.name.size() > 0
+      && d.name.size() < 200
+      && d.keys().size() < 40;
+  }
+
+  function isDayInvite(d) {
+    return d.keys().hasAll(['daybookId'])
+      && d.daybookId is string
+      && d.daybookId.size() > 0
+      && d.daybookId.size() < 200;
+  }
+
+  function isDaybook(d) {
+    return d.ownerId is string
+      && d.ownerId.size() > 0
+      && d.keys().size() < 40;
+  }
+}
