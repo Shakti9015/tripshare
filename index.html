@@ -1355,6 +1355,7 @@ window.addEventListener('appinstalled',function(){
         <div class="pay-chip"        data-method="credit_card" onclick="selectDailyPay(this)">💳 Credit</div>
         <div class="pay-chip"        data-method="debit_card"  onclick="selectDailyPay(this)">🏧 Debit</div>
         <div class="pay-chip"        data-method="netbanking"  onclick="selectDailyPay(this)">🏦 Net Banking</div>
+        <div class="pay-chip"        data-method="wallet"      onclick="selectDailyPay(this)">👛 Wallet</div>
       </div>
     </div>
 
@@ -1467,7 +1468,7 @@ const CAT_COLORS = {
 const PAY_LABELS = {
   cash:'💵 Cash',upi:'📱 UPI',
   credit_card:'💳 Credit',debit_card:'🏧 Debit',
-  netbanking:'🏦 Net Banking',
+  netbanking:'🏦 Net Banking',wallet:'👛 Wallet',
 };
 
 /* ─────────────────────────────────────────────────────
@@ -3197,27 +3198,36 @@ function openDailyMode(){
    DAILY EXPENSES (DAYBOOK) — self-contained, local-first
 ───────────────────────────────────────────────────── */
 const DAILY_CATS=[
-  {cat:'food',icon:'🍽️',label:'Food'},
   {cat:'groceries',icon:'🛒',label:'Groceries'},
-  {cat:'transport',icon:'🚗',label:'Transport'},
-  {cat:'bills',icon:'🧾',label:'Bills'},
-  {cat:'shopping',icon:'🛍️',label:'Shopping'},
+  {cat:'dairy',icon:'🥛',label:'Dairy (Milk & Curd)'},
+  {cat:'water',icon:'💧',label:'Water'},
+  {cat:'dining',icon:'🍽️',label:'Dining Out'},
+  {cat:'utilities',icon:'🧾',label:'Utilities & Bills'},
+  {cat:'housing',icon:'🏠',label:'Housing / Society'},
+  {cat:'rent',icon:'🔑',label:'Rent'},
+  {cat:'insurance',icon:'🛡️',label:'Insurance'},
+  {cat:'education',icon:'🎓',label:'Education / Tuition'},
+  {cat:'transport',icon:'🚌',label:'Transport / Commute'},
+  {cat:'personalcare',icon:'✂️',label:'Personal Care'},
+  {cat:'household',icon:'🧹',label:'Household Supplies'},
   {cat:'health',icon:'💊',label:'Health'},
-  {cat:'fun',icon:'🎬',label:'Fun'},
-  {cat:'rent',icon:'🏠',label:'Rent'},
-  {cat:'other',icon:'📝',label:'Other'},
 ];
 const DAILY_CAT_COLORS={
-  food:'rgba(255,106,138,.18)',groceries:'rgba(53,208,122,.18)',
-  transport:'rgba(100,180,255,.18)',bills:'rgba(255,179,71,.18)',
-  shopping:'rgba(200,100,255,.18)',health:'rgba(255,80,80,.18)',
-  fun:'rgba(124,106,255,.18)',rent:'rgba(80,200,180,.18)',other:'rgba(150,150,200,.18)',
+  groceries:'rgba(53,208,122,.18)',dairy:'rgba(129,199,247,.18)',
+  water:'rgba(0,180,216,.18)',dining:'rgba(255,106,138,.18)',
+  utilities:'rgba(255,179,71,.18)',housing:'rgba(124,106,255,.18)',
+  rent:'rgba(80,200,180,.18)',insurance:'rgba(46,196,182,.18)',education:'rgba(247,127,0,.18)',
+  transport:'rgba(100,180,255,.18)',personalcare:'rgba(200,100,255,.18)',
+  household:'rgba(224,122,95,.18)',health:'rgba(255,80,80,.18)',other:'rgba(150,150,200,.18)',
 };
 const DAILY_CAT_BAR={
-  food:'#ff6a8a',groceries:'#35d07a',transport:'#4facfe',bills:'#ffb347',
-  shopping:'#c864ff',health:'#ff5050',fun:'#7c6aff',rent:'#50c8b4',other:'#9696c8',
+  groceries:'#35d07a',dairy:'#81c7f7',water:'#00b4d8',dining:'#ff6a8a',
+  utilities:'#ffb347',housing:'#7c6aff',rent:'#50c8b4',insurance:'#2ec4b6',education:'#f77f00',
+  transport:'#4facfe',personalcare:'#c864ff',household:'#e07a5f',health:'#ff5050',other:'#9696c8',
 };
-const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'food',selIcon:'🍽️',selPay:'cash',filterCat:'all'};
+// Migrate expenses saved under the old category keys to the new scheme
+const DAILY_CAT_MIGRATE={food:'dining',bills:'utilities',shopping:'household',fun:'dining'};
+const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'groceries',selIcon:'🛒',selPay:'cash',filterCat:'all'};
 
 function dailyCat(key){return DAILY_CATS.find(c=>c.cat===key)||DAILY_CATS[DAILY_CATS.length-1];}
 function dailySave(){lsSet('daily:expenses',D.expenses);lsSet('daily:budgets',D.budgets);}
@@ -3228,6 +3238,13 @@ function curMonthExpenses(){return D.expenses.filter(e=>dailyMonthKey(e.date)===
 function initDaily(){
   D.expenses=lsGet('daily:expenses',[]);
   D.budgets=lsGet('daily:budgets',{});
+  // Move any expenses stored under retired category keys onto the new scheme
+  let migrated=false;
+  D.expenses.forEach(e=>{
+    const next=DAILY_CAT_MIGRATE[e.category];
+    if(next){e.category=next;e.icon=dailyCat(next).icon;migrated=true;}
+  });
+  if(migrated)dailySave();
   if(!D.month)D.month=dailyMonthNow();
   // keep currency in sync with the global setting (trip mode may have changed it)
   const c=lsGet('currency','INR');if(CURRENCIES[c]){S.currency=CURRENCIES[c];S.currencyCode=c;}
@@ -3356,7 +3373,7 @@ function openDailyExpense(id){
   document.getElementById('daily-expense-modal-title').textContent=editing?'Edit Expense':'Add Expense';
   document.getElementById('daily-expense-submit-btn').textContent=editing?'Save Changes':'Add Expense';
   document.getElementById('daily-expense-delete-btn').style.display=editing?'block':'none';
-  const cat=e?e.category:'food';
+  const cat=e?e.category:'groceries';
   D.selCat=cat;D.selIcon=dailyCat(cat).icon;
   buildDailyCatPills(cat);
   document.getElementById('daily-expense-title').value=e?(e.title||''):'';
