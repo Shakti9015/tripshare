@@ -1314,6 +1314,11 @@ window.addEventListener('appinstalled',function(){
       <div id="daily-cat-stats"></div>
     </div>
 
+    <div class="card" id="daily-person-card" style="display:none">
+      <div class="card-title">By Person <span class="card-title-action" onclick="openDailyPeople()">Manage →</span></div>
+      <div id="daily-person-stats"></div>
+    </div>
+
     <div class="card">
       <div class="card-title">Expenses</div>
       <div class="cat-pills" id="daily-filter-cats" style="margin-bottom:14px"></div>
@@ -1353,6 +1358,17 @@ window.addEventListener('appinstalled',function(){
     <div style="height:14px"></div>
 
     <div class="form-group">
+      <label class="form-label">Paid By</label>
+      <select class="form-input" id="daily-expense-paidby" onchange="onDailyPayerChange(this)"></select>
+      <div id="daily-newperson-row" style="display:none;margin-top:8px">
+        <div class="form-row">
+          <input class="form-input" id="daily-newperson-name" type="text" placeholder="New person's name" onkeydown="if(event.key==='Enter'){event.preventDefault();addDailyPerson();}" />
+          <button class="btn-submit" type="button" style="width:auto;margin:0;padding:0 18px;white-space:nowrap" onclick="addDailyPerson()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Payment Method</label>
       <div class="pay-chips" id="daily-pay-chips">
         <div class="pay-chip active" data-method="cash"        onclick="selectDailyPay(this)">💵 Cash</div>
@@ -1371,6 +1387,21 @@ window.addEventListener('appinstalled',function(){
 
     <button class="btn-submit" id="daily-expense-submit-btn" onclick="submitDailyExpense()">Add Expense</button>
     <button class="btn-submit-secondary" id="daily-expense-delete-btn" onclick="deleteDailyExpense()" style="display:none">🗑 Delete Expense</button>
+  </div>
+</div>
+
+<!-- MANAGE PEOPLE (PAID BY) -->
+<div class="modal-overlay" id="modal-daily-people" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 People</div>
+    <div class="modal-subtitle">Add people you pay on behalf of — they appear in the “Paid By” list. Removing someone keeps their name on past expenses.</div>
+    <div class="form-row" style="margin-bottom:12px">
+      <input class="form-input" id="daily-people-name" type="text" placeholder="Person's name" onkeydown="if(event.key==='Enter'){event.preventDefault();addDailyPersonFromManager();}" />
+      <button class="btn-submit" type="button" style="width:auto;margin:0;padding:0 18px;white-space:nowrap" onclick="addDailyPersonFromManager()">Add</button>
+    </div>
+    <div id="daily-people-list"></div>
+    <button class="btn-submit-secondary" onclick="closeModal('modal-daily-people')" style="margin-top:10px">Close</button>
   </div>
 </div>
 
@@ -3279,8 +3310,11 @@ const DAILY_CATS=[
   {cat:'insurance',icon:'🛡️',label:'Insurance'},
   {cat:'education',icon:'🎓',label:'Education / Tuition'},
   {cat:'transport',icon:'🚌',label:'Transport / Commute'},
+  {cat:'fuel',icon:'⛽',label:'Fuel'},
   {cat:'personalcare',icon:'✂️',label:'Personal Care'},
   {cat:'household',icon:'🧹',label:'Household Supplies'},
+  {cat:'shopping',icon:'🛍️',label:'Shopping'},
+  {cat:'sharemarket',icon:'📈',label:'Share Market'},
   {cat:'health',icon:'💊',label:'Health'},
 ];
 const DAILY_CAT_COLORS={
@@ -3288,24 +3322,25 @@ const DAILY_CAT_COLORS={
   water:'rgba(0,180,216,.18)',dining:'rgba(255,106,138,.18)',
   utilities:'rgba(255,179,71,.18)',housing:'rgba(124,106,255,.18)',
   rent:'rgba(80,200,180,.18)',insurance:'rgba(46,196,182,.18)',education:'rgba(247,127,0,.18)',
-  transport:'rgba(100,180,255,.18)',personalcare:'rgba(200,100,255,.18)',
-  household:'rgba(224,122,95,.18)',health:'rgba(255,80,80,.18)',other:'rgba(150,150,200,.18)',
+  transport:'rgba(100,180,255,.18)',fuel:'rgba(255,179,71,.18)',personalcare:'rgba(200,100,255,.18)',
+  household:'rgba(224,122,95,.18)',shopping:'rgba(255,106,138,.18)',sharemarket:'rgba(46,196,182,.18)',health:'rgba(255,80,80,.18)',other:'rgba(150,150,200,.18)',
 };
 const DAILY_CAT_BAR={
   groceries:'#35d07a',dairy:'#81c7f7',water:'#00b4d8',dining:'#ff6a8a',
   utilities:'#ffb347',housing:'#7c6aff',rent:'#50c8b4',insurance:'#2ec4b6',education:'#f77f00',
-  transport:'#4facfe',personalcare:'#c864ff',household:'#e07a5f',health:'#ff5050',other:'#9696c8',
+  transport:'#4facfe',fuel:'#ffb347',personalcare:'#c864ff',household:'#e07a5f',shopping:'#ff6a8a',sharemarket:'#2ec4b6',health:'#ff5050',other:'#9696c8',
 };
 // Migrate expenses saved under the old category keys to the new scheme
-const DAILY_CAT_MIGRATE={food:'dining',bills:'utilities',shopping:'household',fun:'dining'};
+const DAILY_CAT_MIGRATE={food:'dining',bills:'utilities',fun:'dining'};
 const D={expenses:[],budgets:{},month:null,editingId:null,selCat:'groceries',selIcon:'🛒',selPay:'cash',filterCat:'all',
-  daybookId:null,inviteCode:null,ownerId:null,members:[]};
+  daybookId:null,inviteCode:null,ownerId:null,members:[],people:[]};
 let dailyUnsub=null;
 function dailyIsShared(){return !!D.daybookId;}
 
 function dailyCat(key){return DAILY_CATS.find(c=>c.cat===key)||DAILY_CATS[DAILY_CATS.length-1];}
 function dailySave(){
   lsSet('daily:expenses',D.expenses);
+  lsSet('daily:people',D.people);
   // Budgets live in the cloud daybook doc while sharing; keep local budgets untouched then.
   if(!dailyIsShared())lsSet('daily:budgets',D.budgets);
 }
@@ -3317,6 +3352,7 @@ function initDaily(){
   if(!D.month)D.month=dailyMonthNow();
   // keep currency in sync with the global setting (trip mode may have changed it)
   const cur=lsGet('currency','INR');if(CURRENCIES[cur]){S.currency=CURRENCIES[cur];S.currencyCode=cur;}
+  D.people=lsGet('daily:people',[]);
   // Reconnect to a shared DayBook if this device previously joined one
   const shared=lsGet('daily:daybook',null);
   if(shared&&FIREBASE_ENABLED&&db){
@@ -3375,6 +3411,7 @@ function renderDaily(){
   }else bc.style.display='none';
 
   renderDailyCatStats(items,total);
+  renderDailyPersonStats(items,total);
   renderDailyFilters();
   renderDailyList(items);
 }
@@ -3394,6 +3431,57 @@ function renderDailyCatStats(items,total){
       </div>
     </div>`;
   }).join('');
+}
+
+// Per-person spending breakdown for the current month
+function renderDailyPersonStats(items,total){
+  const card=document.getElementById('daily-person-card');
+  const box=document.getElementById('daily-person-stats');
+  const byPerson={};
+  items.forEach(e=>{
+    const name=(e.paidByName&&e.paidByName.trim())||(S.user?.name||'Me');
+    byPerson[name]=(byPerson[name]||0)+(parseFloat(e.amount)||0);
+  });
+  const entries=Object.entries(byPerson).sort((a,b)=>b[1]-a[1]);
+  // Only useful once there is more than one payer or you have added people
+  const show=items.length>0&&(entries.length>1||(D.people||[]).length>0);
+  card.style.display=show?'block':'none';
+  if(!show){box.innerHTML='';return;}
+  const palette=MEMBER_COLORS||['#7c6aff'];
+  box.innerHTML=entries.map(([name,amt],i)=>{
+    const pct=total>0?Math.round((amt/total)*100):0;
+    const color=palette[i%palette.length];
+    return`<div class="stat-row">
+      <div class="daily-member-av" style="width:34px;height:34px;font-size:13px;background:${color}">${memberInitials(name)}</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span>${name.replace(/</g,'&lt;')}</span><span>${fmt(amt)} · ${pct}%</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- manage people (Paid By) ---- */
+function openDailyPeople(){renderDailyPeopleList();openModal('modal-daily-people');}
+function renderDailyPeopleList(){
+  const box=document.getElementById('daily-people-list');
+  const people=D.people||[];
+  if(!people.length){box.innerHTML='<p style="font-size:.8rem;color:var(--text3);padding:4px 2px">No people added yet.</p>';return;}
+  box.innerHTML=people.map(p=>`<div class="daily-member-chip"><span class="daily-member-av" style="background:${MEMBER_COLORS[0]}">${memberInitials(p.name)}</span><span>${(p.name||'').replace(/</g,'&lt;')}</span><span class="daily-member-tag" style="cursor:pointer;color:var(--accent)" onclick="removeDailyPerson('${p.id}')">Remove</span></div>`).join('');
+}
+function addDailyPersonFromManager(){
+  const inp=document.getElementById('daily-people-name');
+  const name=inp.value.trim();
+  if(!name){showToast('⚠️ Enter a name');return;}
+  if(dailyPayerList().some(p=>(p.name||'').toLowerCase()===name.toLowerCase())){showToast('⚠️ Already added');return;}
+  D.people.push({id:genId(),name});dailySave();
+  inp.value='';renderDailyPeopleList();renderDaily();showToast(`✅ ${name} added`);
+}
+function removeDailyPerson(id){
+  const p=(D.people||[]).find(x=>x.id===id);if(!p)return;
+  showConfirm({icon:'👤',title:`Remove ${p.name}?`,msg:'They will be removed from the Paid By list. Past expenses keep their name.',okLabel:'Remove',okClass:'danger',onOk:()=>{
+    D.people=D.people.filter(x=>x.id!==id);dailySave();renderDailyPeopleList();renderDaily();showToast(`🗑 ${p.name} removed`);
+  }});
 }
 
 function renderDailyFilters(){
@@ -3417,12 +3505,13 @@ function renderDailyList(items){
     const rows=dayItems.map(e=>{
       const c=dailyCat(e.category);
       const method=PAY_LABELS[e.paymentMethod]||'';
+      const paidTxt=e.paidByName?`<span>· 👤 ${e.paidByName.replace(/</g,'&lt;')}</span>`:'';
       const who=(dailyIsShared()&&e.addedByName)?`<span>· ✍️ ${e.addedByName.replace(/</g,'&lt;')}</span>`:'';
       return`<div class="expense-item" onclick="openDailyExpense('${e.id}')">
         <div class="expense-icon" style="background:${DAILY_CAT_COLORS[e.category]||DAILY_CAT_COLORS.other}">${c.icon}</div>
         <div class="expense-details">
           <div class="expense-name">${(e.title||c.label).replace(/</g,'&lt;')}</div>
-          <div class="expense-meta"><span class="pay-method-badge">${method}</span>${e.note?'<span>· '+e.note.replace(/</g,'&lt;')+'</span>':''}${who}</div>
+          <div class="expense-meta"><span class="pay-method-badge">${method}</span>${e.note?'<span>· '+e.note.replace(/</g,'&lt;')+'</span>':''}${paidTxt}${who}</div>
         </div>
         <div class="expense-amount"><div class="expense-amount-val">${fmt(e.amount)}</div></div>
       </div>`;
@@ -3455,6 +3544,42 @@ function buildDailyCatPills(active){
   document.getElementById('daily-modal-cat-pills').innerHTML=DAILY_CATS.map(c=>`<div class="cat-pill${c.cat===active?' active':''}" data-cat="${c.cat}" data-icon="${c.icon}" onclick="selectDailyCat(this)"><div class="cat-pill-icon">${c.icon}</div><div class="cat-pill-lbl">${c.label}</div></div>`).join('');
 }
 
+// Combined list of people who can be selected as "Paid By": me, shared partners, and locally-added people
+function dailyPayerList(){
+  const meId=S.user?.id||'me';
+  const meName=S.user?.name||'Me';
+  const list=[{id:meId,name:meName}];
+  (D.members||[]).forEach(m=>{if(m.id&&m.id!==meId&&!list.some(x=>x.id===m.id))list.push({id:m.id,name:m.name});});
+  (D.people||[]).forEach(p=>{if(p.id&&!list.some(x=>x.id===p.id))list.push({id:p.id,name:p.name});});
+  return list;
+}
+function buildDailyPayerOptions(selectedId,extra){
+  const sel=document.getElementById('daily-expense-paidby');
+  const payers=dailyPayerList();
+  if(extra&&extra.id&&!payers.some(p=>p.id===extra.id))payers.push({id:extra.id,name:extra.name||'Unknown'});
+  if(!selectedId||!payers.some(p=>p.id===selectedId))selectedId=payers[0].id;
+  sel.innerHTML=payers.map(p=>`<option value="${p.id}">${(p.name||'').replace(/</g,'&lt;')}</option>`).join('')
+    +`<option value="__add__">➕ Add person…</option>`;
+  sel.value=selectedId;
+}
+function onDailyPayerChange(sel){
+  const row=document.getElementById('daily-newperson-row');
+  if(sel.value==='__add__'){row.style.display='block';const n=document.getElementById('daily-newperson-name');n.value='';n.focus();}
+  else row.style.display='none';
+}
+function addDailyPerson(){
+  const inp=document.getElementById('daily-newperson-name');
+  const name=inp.value.trim();
+  if(!name){showToast('⚠️ Enter a name');return;}
+  if(dailyPayerList().some(p=>(p.name||'').toLowerCase()===name.toLowerCase())){showToast('⚠️ Already added');return;}
+  const person={id:genId(),name};
+  D.people.push(person);dailySave();
+  inp.value='';
+  document.getElementById('daily-newperson-row').style.display='none';
+  buildDailyPayerOptions(person.id);
+  showToast(`✅ ${name} added`);
+}
+
 function openDailyExpense(id){
   const editing=typeof id==='string'&&!!id;
   D.editingId=editing?id:null;
@@ -3472,6 +3597,9 @@ function openDailyExpense(id){
   document.getElementById('daily-expense-note').value=e?(e.note||''):'';
   D.selPay=e?(e.paymentMethod||'cash'):'cash';
   document.querySelectorAll('#daily-pay-chips .pay-chip').forEach(p=>p.classList.toggle('active',p.dataset.method===D.selPay));
+  const paidBy=e?(e.paidBy||''):(S.user?.id||'me');
+  buildDailyPayerOptions(paidBy,e&&e.paidBy?{id:e.paidBy,name:e.paidByName}:null);
+  document.getElementById('daily-newperson-row').style.display='none';
   openModal('modal-daily-expense');
 }
 
@@ -3482,13 +3610,17 @@ function submitDailyExpense(){
   const note=document.getElementById('daily-expense-note').value.trim();
   if(!amount||amount<=0){showToast('⚠️ Enter a valid amount');return;}
   if(!date){showToast('⚠️ Pick a date');return;}
+  const paidBy=document.getElementById('daily-expense-paidby').value;
+  if(paidBy==='__add__'){showToast('⚠️ Add the person or pick who paid');return;}
+  const payer=dailyPayerList().find(p=>p.id===paidBy);
+  const paidByName=payer?payer.name:(D.editingId?((D.expenses.find(x=>x.id===D.editingId)||{}).paidByName||''):'');
   if(D.editingId){
-    const changes={title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay};
+    const changes={title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,paidBy,paidByName};
     const idx=D.expenses.findIndex(x=>x.id===D.editingId);
     if(idx>-1){D.expenses[idx]={...D.expenses[idx],...changes};if(dailyIsShared())dailyCloudSet(D.editingId,D.expenses[idx]);}
     showToast('✅ Expense updated');
   }else{
-    const exp={id:genId(),title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,
+    const exp={id:genId(),title,amount,date,note,category:D.selCat,icon:D.selIcon,paymentMethod:D.selPay,paidBy,paidByName,
       addedByName:S.user?.name||'',addedById:S.user?.id||'',createdAt:Date.now()};
     D.expenses.unshift(exp);
     if(dailyIsShared())dailyCloudSet(exp.id,exp);
